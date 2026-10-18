@@ -201,12 +201,30 @@ describe('Mèo Nổ — mục tiêu & combo', () => {
     expect(s.currentId).toBe('p0');
   });
 
-  it('cặp mèo cướp ngẫu nhiên 1 lá', () => {
-    let s = setup(['cat_tra_sua cat_tra_sua', 'defuse'], 'skip');
+  it('cặp mèo: người đánh chọn 1 lá úp trên tay mục tiêu', () => {
+    let s = setup(['cat_tra_sua cat_tra_sua', 'defuse attack skip'], 'skip');
     expectRule(() => act(s, 'p0', 'play', { cardIds: [s.players.p0.hand[0].id, 'x'] }));
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'cat_tra_sua'), targetId: 'p1' }));
-    expect(s.players.p0.hand.map((c) => c.def)).toEqual(['defuse']);
-    expect(s.players.p1.hand).toHaveLength(0);
+    expect(s.pending?.kind).toBe('steal_pick');
+    const view = catsEngine.projectView(s, 'p0') as any;
+    expect(view.pending.slots).toEqual([null, null, null]); // úp hết, không lộ lá nào
+    expectRule(() => act(s, 'p1', 'pickSteal', { index: 0 }));
+    expectRule(() => act(s, 'p0', 'pickSteal', { index: 3 }), /không hợp lệ/);
+    const pending = s.pending as any;
+    const chosen = s.players.p1.hand.find((c) => c.id === pending.order[2])!;
+    s = act(s, 'p0', 'pickSteal', { index: 2 });
+    expect(s.players.p0.hand.map((c) => c.id)).toEqual([chosen.id]);
+    expect(s.players.p1.hand).toHaveLength(2);
+    expect(s.pending).toBeNull();
+    expect(s.currentId).toBe('p0');
+  });
+
+  it('cặp mèo: hết giờ chọn thì lấy ngẫu nhiên', () => {
+    let s = setup(['cat_tra_sua cat_tra_sua', 'defuse attack'], 'skip');
+    s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'cat_tra_sua'), targetId: 'p1' }, 2000));
+    s = catsEngine.onDeadline(s, ctx(2000 + CATS_DEFAULT_CONFIG.choiceTimeMs + 10)).state;
+    expect(s.players.p0.hand).toHaveLength(1);
+    expect(s.players.p1.hand).toHaveLength(1);
   });
 
   it('bộ ba mèo đòi đúng lá được gọi tên', () => {
@@ -218,7 +236,7 @@ describe('Mèo Nổ — mục tiêu & combo', () => {
 
   it('combo phải giống hệt nhau', () => {
     const s = setup(['cat_tra_sua cat_pho_bo', 'skip'], 'skip');
-    expectRule(() => act(s, 'p0', 'play', { cardIds: s.players.p0.hand.map((c) => c.id), targetId: 'p1' }), /giống hệt/);
+    expectRule(() => act(s, 'p0', 'play', { cardIds: s.players.p0.hand.map((c) => c.id), targetId: 'p1' }), /giống nhau/);
   });
 });
 

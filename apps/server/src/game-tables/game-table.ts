@@ -144,7 +144,7 @@ export class GameTable {
     if (!snap || snap.v !== 1 || snap.rulesVersion !== this.engine.rulesVersion) return;
     const now = this.now();
     // Mọi người coi như đang mất kết nối cho tới khi kết nối lại.
-    this.seats = snap.seats.map((s) => ({ ...s, connected: false, disconnectedAt: s.disconnectedAt ?? now, disconnectLogged: true }));
+    this.seats = snap.seats.map((s) => ({ ...s, connected: false, ready: false, disconnectedAt: s.disconnectedAt ?? now, disconnectLogged: true }));
     this.round = snap.round;
     this.log = snap.log;
     this.logSeq = snap.logSeq;
@@ -294,22 +294,26 @@ export class GameTable {
     if (!seat || seat.connected === connected) return;
     seat.connected = connected;
     seat.disconnectedAt = connected ? null : this.now();
+    // Người vắng mặt không thể xác nhận sẵn sàng.
+    if (!connected) seat.ready = false;
     if (connected && seat.disconnectLogged) this.sys(`${this.nick(playerId)} đã kết nối lại.`, 'system');
     seat.disconnectLogged = false;
+    this.maybeStart();
     this.changed();
   }
 
   /** Lý do không thể bắt đầu với số người hiện tại (nếu có). */
   startBlocker(): string | null {
-    const n = this.activeSeats().length;
+    const n = this.activeSeats().filter((s) => s.connected).length;
     if (n < this.engine.minPlayers) return `Cần ít nhất ${this.engine.minPlayers} người để bắt đầu.`;
     return this.engine.validateStart(this.config, n);
   }
 
   private maybeStart() {
     if (this.roundActive() || this.manual) return;
-    const seats = this.activeSeats();
-    if (seats.length < this.engine.minPlayers || !seats.every((s) => s.ready && s.connected)) return;
+    // Chỉ tính người đang kết nối; người mất kết nối sẽ chờ ván sau thay vì chặn cả bàn.
+    const seats = this.activeSeats().filter((s) => s.connected);
+    if (seats.length < this.engine.minPlayers || !seats.every((s) => s.ready)) return;
     const blocker = this.engine.validateStart(this.config, seats.length);
     if (blocker) {
       this.sys(`Không thể bắt đầu: ${blocker}`, 'warn');
@@ -325,7 +329,7 @@ export class GameTable {
     const config = structuredClone(this.config); // đóng băng cấu hình cho ván
     const roundPlayers = seats.map((s) => ({ id: s.playerId, nickname: this.nick(s.playerId) }));
     for (const s of this.seats) {
-      s.waiting = false;
+      s.waiting = !seats.includes(s);
       s.ready = false;
     }
     this.store.createSession({

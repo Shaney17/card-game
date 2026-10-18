@@ -31,6 +31,23 @@ const PALETTES: Record<string, Palette> = {
   draw_bottom: { bg: '#6b4a2f', panel: '#f1e1cf', accent: '#a7744a' },
   alter_future: { bg: '#5a2e91', panel: '#eadcff', accent: '#a46bff' },
   targeted_attack: { bg: '#8f1d2c', panel: '#ffd7d2', accent: '#ff5b4a' },
+  feral_cat: { bg: '#6b6a2f', panel: '#eef0c8', accent: '#b8b84a' },
+  imploding: { bg: '#141020', panel: '#3b2a7a', accent: '#a98bff', text: '#e9e0ff' },
+  super_skip: { bg: '#1f4fb8', panel: '#d6e6ff', accent: '#ffd45c' },
+  streaking: { bg: '#d2462f', panel: '#ffe1cf', accent: '#ff9a3d' },
+  swap_top_bottom: { bg: '#2c8a5e', panel: '#d5f5e4', accent: '#46c78a' },
+  catomic: { bg: '#2a2a2a', panel: '#fff1a8', accent: '#f2c40f', text: '#fff1a8' },
+  garbage: { bg: '#4f7a2a', panel: '#e5f3cf', accent: '#7fb84a' },
+  mark: { bg: '#b8731a', panel: '#ffefd2', accent: '#ff5b4a' },
+  bury: { bg: '#5e4027', panel: '#f0dfc8', accent: '#9a6b3e' },
+  personal_attack: { bg: '#b3264f', panel: '#ffd6e2', accent: '#ff5b85' },
+  potluck: { bg: '#c2401f', panel: '#ffe4cc', accent: '#ff8a3d' },
+  share_future: { bg: '#1f7f86', panel: '#d2f3f4', accent: '#4fd0d6' },
+  dig_deeper: { bg: '#3b2a1c', panel: '#e8d5bd', accent: '#c48a4a', text: '#ffe9c7' },
+  time_bomb: { bg: '#5a1020', panel: '#ffd9c2', accent: '#ff5b4a', text: '#ffe3d6' },
+  pass_bomb: { bg: '#c25a12', panel: '#ffe6cc', accent: '#ff9a3d' },
+  fast_forward: { bg: '#24346b', panel: '#dbe4ff', accent: '#5a7cff' },
+  take_that: { bg: '#6b2a8a', panel: '#f1dcff', accent: '#c06bff' },
 };
 
 const ORANGE = '#f59a3c';
@@ -297,6 +314,263 @@ const SCENES: Record<string, (p: Palette) => ReactNode> = {
       <path d="M70 52 L74 42 L80 48 Z" fill="#c0c6d0" stroke={INK} strokeWidth="1.2" />
     </>
   ),
+  feral_cat: () => (
+    <>
+      <g fill="#8a7d5a" stroke={INK} strokeWidth="1.4">
+        {[-50, -25, 0, 25, 50].map((a, i) => (
+          <path key={i} d="M60 60 L54 26 L66 26 Z" transform={`rotate(${a} 60 62)`} />
+        ))}
+      </g>
+      <CatHead cx={60} cy={64} r={24} fur="#a89a72" stripes="#6e6446" eyes="sly" mouth="grin" earTilt={-14} />
+      <path d="M42 56 L56 56 L54 64 L44 64 Z" fill={INK} />
+      <path d="M36 54 L84 50" stroke={INK} strokeWidth="2" />
+      <Sparkle x={92} y={96} r={9} fill="#ffd45c" />
+      <text x="60" y="118" textAnchor="middle" fontSize="13" fontWeight="900" fill={INK} fontFamily="'Be Vietnam Pro',sans-serif">
+        JOKER
+      </text>
+    </>
+  ),
+  imploding: (p) => (
+    <>
+      {[48, 38, 28, 18].map((r, i) => (
+        <circle key={r} cx={60} cy={64} r={r} fill="none" stroke={p.accent} strokeWidth={3 - i * 0.4} strokeDasharray="10 6" opacity={0.4 + i * 0.15} transform={`rotate(${i * 25} 60 64)`} />
+      ))}
+      <circle cx={60} cy={64} r={14} fill="#05030a" />
+      <g transform="rotate(-18 60 60) scale(.8) translate(15 12)">
+        <CatHead cx={60} cy={60} r={20} fur="#2b2338" inner="#a98bff" eyes="spiral" mouth="o" blush={false} />
+      </g>
+      <g transform="translate(92 22)">
+        <circle r="10" fill="#fff" stroke={INK} strokeWidth="1.6" />
+        <path d="M0 -6 L0 0 M-4.5 -3.5 A6 6 0 1 0 4.5 -3.5" stroke="#e23b3b" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      </g>
+    </>
+  ),
+  super_skip: (p) => (
+    <>
+      <path d="M30 40 C 20 70 26 104 44 118 L60 92 L76 118 C 94 104 100 70 90 40 Z" fill="#e23b3b" stroke={INK} strokeWidth="1.6" />
+      <CatHead cx={60} cy={48} r={21} fur={WHITE} stripes="#d0c4b0" eyes="determined" mouth="smile" />
+      <rect x={44} y={42} width="32" height="8" rx="4" fill={p.bg} opacity=".85" />
+      <g stroke={p.accent} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M30 98 L44 108 L30 118" />
+        <path d="M50 98 L64 108 L50 118" />
+        <path d="M70 98 L84 108 L70 118" />
+      </g>
+    </>
+  ),
+  streaking: () => (
+    <>
+      <Bomb x={80} y={92} r={16} lit={false} />
+      <CatHead cx={52} cy={56} r={22} fur={ORANGE} stripes="#c96a1d" eyes="happy" mouth="grin" />
+      <g>
+        <rect x={34} y={48} width="15" height="9" rx="3" fill={INK} />
+        <rect x={55} y={48} width="15" height="9" rx="3" fill={INK} />
+        <path d="M49 51 L55 51" stroke={INK} strokeWidth="2" />
+      </g>
+      <Paw x={68} y={86} r={7} fur={ORANGE} />
+      <text x="28" y="110" fontSize="22" fontWeight="900" fill="#e8553a" fontFamily="'Be Vietnam Pro',sans-serif">
+        ✓
+      </text>
+    </>
+  ),
+  swap_top_bottom: (p) => (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={i} x={40} y={22 + i * 22} width="40" height="18" rx="3" fill={i === 0 ? '#ffd45c' : i === 3 ? '#ffb3c7' : '#fff'} stroke={INK} strokeWidth="1.4" />
+      ))}
+      <path d="M90 30 C 108 50 108 80 90 100" stroke={p.bg} strokeWidth="5" fill="none" strokeLinecap="round" />
+      <path d="M84 96 L92 104 L98 92" stroke={p.bg} strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M30 100 C 12 80 12 50 30 30" stroke={p.accent} strokeWidth="5" fill="none" strokeLinecap="round" />
+      <path d="M36 34 L28 26 L22 38" stroke={p.accent} strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <g transform="translate(0 4)">
+        <CatHead cx={60} cy={62} r={13} fur={GREY} stripes="#6f7686" eyes="wide" mouth="o" />
+      </g>
+    </>
+  ),
+  catomic: (p) => (
+    <>
+      <circle cx={60} cy={62} r={44} fill={p.accent} opacity=".35" />
+      <g transform="translate(60 62)">
+        {[0, 120, 240].map((a) => (
+          <path key={a} d="M0 0 L-16 -38 A40 40 0 0 1 16 -38 Z" fill={INK} transform={`rotate(${a})`} />
+        ))}
+        <circle r="10" fill={p.accent} stroke={INK} strokeWidth="3" />
+      </g>
+      <Bomb x={28} y={108} r={9} />
+      <Bomb x={60} y={112} r={9} />
+      <Bomb x={92} y={108} r={9} />
+      <g transform="translate(60 62) scale(.4) translate(-60 -60)">
+        <CatHead cx={60} cy={60} r={20} fur={BLACKCAT} inner="#ffd45c" eyes="angry" mouth="grin" blush={false} />
+      </g>
+    </>
+  ),
+  garbage: (p) => (
+    <>
+      <path d="M30 56 L90 56 L84 122 L36 122 Z" fill="#9aa5ad" stroke={INK} strokeWidth="1.8" />
+      <g stroke="#6c7780" strokeWidth="3">
+        <path d="M46 64 L48 116" />
+        <path d="M60 64 L60 116" />
+        <path d="M74 64 L72 116" />
+      </g>
+      <CatHead cx={60} cy={46} r={18} fur={GREY} stripes="#6f7686" eyes="sly" mouth="cat" />
+      <g transform="rotate(-24 34 30)">
+        <rect x={22} y={24} width="56" height="8" rx="3" fill="#b8c2c9" stroke={INK} strokeWidth="1.6" />
+        <rect x={42} y={18} width="16" height="7" rx="2" fill="#b8c2c9" stroke={INK} strokeWidth="1.4" />
+      </g>
+      <MiniCard x={96} y={44} r={20} fill={p.accent} />
+      <path d="M88 82 C 96 78 104 86 98 92" stroke="#7a8a3a" strokeWidth="2" fill="none" />
+    </>
+  ),
+  mark: (p) => (
+    <>
+      <MiniCard x={36} y={90} r={-12} fill="#fff" />
+      <MiniCard x={58} y={94} r={0} fill="#ffd45c" label="!" />
+      <MiniCard x={80} y={90} r={12} fill="#fff" />
+      <circle cx={58} cy={94} r={18} fill="none" stroke={p.accent} strokeWidth="3.4" strokeDasharray="6 4" />
+      <CatHead cx={52} cy={42} r={18} fur={CREAM} stripes="#d9b77a" eyes="sly" mouth="smile" />
+      <g transform="translate(86 46) rotate(30)">
+        <circle r="13" fill="#cfefff" fillOpacity=".6" stroke={INK} strokeWidth="3" />
+        <rect x="-3" y="12" width="6" height="18" rx="2" fill="#6b4a2f" stroke={INK} strokeWidth="1.2" />
+      </g>
+    </>
+  ),
+  bury: () => (
+    <>
+      <path d="M8 100 C 30 84 90 84 112 100 L112 128 L8 128 Z" fill="#8b5e3c" />
+      <path d="M8 100 C 30 84 90 84 112 100" stroke={INK} strokeWidth="1.6" fill="none" />
+      <g fill="#6e4528">
+        <circle cx={30} cy={110} r="2" />
+        <circle cx={70} cy={116} r="2.4" />
+        <circle cx={94} cy={106} r="1.8" />
+      </g>
+      <g transform="rotate(-15 60 98)">
+        <rect x={50} y={84} width="22" height="30" rx="3" fill="#fff" stroke={INK} strokeWidth="1.5" />
+      </g>
+      <CatHead cx={46} cy={50} r={20} fur={ORANGE} stripes="#c96a1d" eyes="sly" mouth="smile" />
+      <g transform="rotate(30 90 50)">
+        <rect x={87} y={20} width="6" height="46" rx="2" fill="#a7744a" stroke={INK} strokeWidth="1.3" />
+        <path d="M82 64 L98 64 L96 82 C 94 88 86 88 84 82 Z" fill="#c0c6d0" stroke={INK} strokeWidth="1.5" />
+      </g>
+    </>
+  ),
+  personal_attack: (p) => (
+    <>
+      <text x="92" y="34" textAnchor="middle" fontSize="20" fontWeight="900" fill={p.bg} fontFamily="'Be Vietnam Pro',sans-serif">
+        ×3
+      </text>
+      <CatHead cx={54} cy={60} r={22} fur={WHITE} stripes="#d0c4b0" eyes="spiral" mouth="open" />
+      <g transform="rotate(-140 80 84)">
+        <ellipse cx={80} cy={84} rx={14} ry={12} fill="#e23b3b" stroke={INK} strokeWidth="1.8" />
+        <rect x={72} y={92} width="16" height="9" rx="3" fill="#fff" stroke={INK} strokeWidth="1.5" />
+      </g>
+      <Burst cx={34} cy={36} r={12} points={8} fill="#ffd45c" />
+    </>
+  ),
+  potluck: () => (
+    <>
+      <g stroke="#c9b8a0" strokeWidth="2.4" fill="none" strokeLinecap="round" opacity=".85">
+        <path d="M40 24 C 36 16 44 12 40 4" />
+        <path d="M80 24 C 76 16 84 12 80 4" />
+      </g>
+      <MiniCard x={42} y={48} r={-20} fill="#ffe28a" />
+      <MiniCard x={60} y={42} r={0} fill="#9fe2c4" />
+      <MiniCard x={78} y={48} r={20} fill="#ffb3c7" />
+      <path d="M14 64 L106 64 L100 104 C 96 118 24 118 20 104 Z" fill="#c8323c" stroke={INK} strokeWidth="1.8" />
+      <rect x={10} y={60} width="100" height="8" rx="4" fill="#e04a52" stroke={INK} strokeWidth="1.6" />
+      <path d="M6 72 C 0 72 0 86 10 84 M114 72 C 120 72 120 86 110 84" stroke={INK} strokeWidth="3" fill="none" />
+      <path d="M24 82 C 40 88 80 88 96 82" stroke="#f2c14e" strokeWidth="3" fill="none" strokeDasharray="5 4" />
+      <g transform="translate(60 98) scale(.5) translate(-60 -60)">
+        <CatHead cx={60} cy={60} r={20} fur={ORANGE} stripes="#c96a1d" eyes="happy" mouth="grin" />
+      </g>
+    </>
+  ),
+  share_future: (p) => (
+    <>
+      <circle cx={60} cy={44} r={22} fill={p.accent} stroke={INK} strokeWidth="1.8" />
+      <circle cx={60} cy={44} r={15} fill="#e2fbfc" opacity=".8" />
+      <path d="M50 38 Q 56 32 62 36" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <rect x={46} y={62} width="28" height="7" rx="3" fill="#b07a3a" stroke={INK} strokeWidth="1.4" />
+      <CatHead cx={30} cy={96} r={17} fur={BLACKCAT} inner="#9fe8ec" eyes="wide" mouth="cat" blush={false} />
+      <CatHead cx={90} cy={96} r={17} fur={CREAM} stripes="#d9b77a" eyes="stars" mouth="o" />
+      <Sparkle x={18} y={26} r={6} fill="#fff" />
+      <Sparkle x={102} y={22} r={5} fill="#fff" />
+    </>
+  ),
+  dig_deeper: () => (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={i} x={18 + i * 3} y={58 + i * 15} width={84 - i * 6} height="13" rx="3" fill={['#c48a4a', '#a8723c', '#8b5e3c', '#6e4528'][i]} stroke={INK} strokeWidth="1.2" />
+      ))}
+      <rect x={52} y={88} width="20" height="14" rx="2" fill="#ffd45c" stroke={INK} strokeWidth="1.4" />
+      <CatHead cx={60} cy={36} r={18} fur={GREY} stripes="#6f7686" eyes="determined" mouth="flat" />
+      <path d="M44 24 C 46 12 74 12 76 24 Z" fill="#f2c14e" stroke={INK} strokeWidth="1.5" />
+      <circle cx={60} cy={18} r="4" fill="#fff6c2" stroke={INK} strokeWidth="1.2" />
+      <path d="M60 22 L52 92 L68 92 Z" fill="#fff6c2" opacity=".35" />
+    </>
+  ),
+  time_bomb: (p) => (
+    <>
+      <Burst cx={60} cy={70} r={50} points={16} fill={p.accent} />
+      <circle cx={60} cy={74} r={34} fill="#22202a" stroke={INK} strokeWidth="2" />
+      <path d="M34 48 L28 26 L46 40 Z M86 48 L92 26 L74 40 Z" fill="#22202a" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+      <circle cx={60} cy={74} r={24} fill="#fff6e8" stroke={INK} strokeWidth="1.6" />
+      {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((a) => (
+        <line key={a} x1={60} y1={53} x2={60} y2={57} stroke={INK} strokeWidth="1.6" transform={`rotate(${a} 60 74)`} />
+      ))}
+      <line x1={60} y1={74} x2={60} y2={58} stroke={INK} strokeWidth="2.6" strokeLinecap="round" />
+      <line x1={60} y1={74} x2={72} y2={80} stroke="#e23b3b" strokeWidth="2.6" strokeLinecap="round" />
+      <circle cx={60} cy={74} r={2.6} fill={INK} />
+      <text x={60} y={118} textAnchor="middle" fontSize="15" fontWeight="900" fill="#fff" stroke={INK} strokeWidth="3" paintOrder="stroke" fontFamily="'Be Vietnam Pro',sans-serif">
+        3 · 2 · 1
+      </text>
+      <rect x={52} y={34} width="16" height="8" rx="2" fill="#55515f" stroke={INK} strokeWidth="1.2" />
+      <path d="M60 34 C 64 24 74 28 76 18" stroke="#c9a46a" strokeWidth="2" fill="none" />
+      <Sparkle x={78} y={16} r={6} fill="#ffd45c" />
+    </>
+  ),
+  pass_bomb: () => (
+    <>
+      <path d="M30 80 C 40 30 84 26 96 56" stroke={INK} strokeWidth="2" strokeDasharray="4 5" fill="none" />
+      <g transform="translate(70 34)">
+        <Bomb x={0} y={0} r={11} />
+      </g>
+      <CatHead cx={28} cy={92} r={18} fur={ORANGE} stripes="#c96a1d" eyes="happy" mouth="grin" />
+      <Paw x={44} y={76} r={6} fur={ORANGE} />
+      <CatHead cx={94} cy={92} r={16} fur={WHITE} stripes="#d0c4b0" eyes="wide" mouth="open" />
+      <g stroke={INK} strokeWidth="2" strokeLinecap="round">
+        <path d="M84 66 L80 60" />
+        <path d="M94 64 L94 57" />
+        <path d="M104 66 L108 60" />
+      </g>
+    </>
+  ),
+  fast_forward: (p) => (
+    <>
+      <circle cx={60} cy={56} r={30} fill="#fff" stroke={INK} strokeWidth="2" />
+      <path d="M60 56 L60 34 M60 56 L76 64" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+      <path d="M38 30 A 34 34 0 0 1 92 36" stroke={p.accent} strokeWidth="4" fill="none" strokeLinecap="round" />
+      <path d="M86 28 L94 38 L82 40" stroke={p.accent} strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <g fill={p.bg} stroke={INK} strokeWidth="1.6" strokeLinejoin="round">
+        <path d="M28 96 L48 108 L28 120 Z" />
+        <path d="M48 96 L68 108 L48 120 Z" />
+        <path d="M68 96 L88 108 L68 120 Z" />
+      </g>
+      <g transform="translate(60 56) scale(.42) translate(-60 -60)">
+        <CatHead cx={60} cy={60} r={20} fur={GREY} stripes="#6f7686" eyes="spiral" mouth="o" />
+      </g>
+    </>
+  ),
+  take_that: (p) => (
+    <>
+      <MiniCard x={78} y={34} r={14} fill="#ffe28a" label="?" />
+      <path d="M40 58 C 54 44 66 40 72 44" stroke={p.accent} strokeWidth="4" fill="none" strokeLinecap="round" strokeDasharray="2 6" />
+      <g transform="translate(70 46) rotate(-20)">
+        <ellipse cx={0} cy={0} rx={10} ry={8} fill={BLACKCAT} stroke={INK} strokeWidth="1.6" />
+        <path d="M-6 -6 L-9 -14 M0 -8 L0 -16 M6 -6 L9 -14" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      </g>
+      <CatHead cx={42} cy={86} r={24} fur={BLACKCAT} inner="#e6c4ff" eyes="sly" mouth="grin" blush={false} />
+      <Sparkle x={98} y={98} r={7} fill="#fff" />
+    </>
+  ),
 };
 
 /** Dùng cho kiểm thử: lá nào đã có minh hoạ riêng. */
@@ -339,9 +613,12 @@ export const CatsCardFace = memo(function CatsCardFace({ defId, small = false }:
         {name}
       </text>
       {def?.category === 'collection' && <circle cx="104" cy="148" r="5" fill={p.accent} stroke={INK} strokeWidth="1.2" />}
-      {def?.expansionId === 'hon-loan' && (
+      {def && def.expansionId !== 'base' && (
         <g transform="translate(14 148)">
-          <path d="M0 -6 L6 0 L0 6 L-6 0 Z" fill="#ffd45c" stroke={INK} strokeWidth="1.2" />
+          {def.expansionId === 'hon-loan' && <path d="M0 -6 L6 0 L0 6 L-6 0 Z" fill="#ffd45c" stroke={INK} strokeWidth="1.2" />}
+          {def.expansionId === 'tang-toc' && <path d="M-6 4 L0 -6 L6 4 Z" fill="#5aa5ff" stroke={INK} strokeWidth="1.2" />}
+          {def.expansionId === 'dao-boi' && <circle r="5.5" fill="#c48a4a" stroke={INK} strokeWidth="1.2" />}
+          {def.expansionId === 'hen-gio' && <rect x="-5" y="-5" width="10" height="10" rx="2" fill="#ff5b4a" stroke={INK} strokeWidth="1.2" />}
         </g>
       )}
     </svg>

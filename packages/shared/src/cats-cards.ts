@@ -2,8 +2,8 @@
  * Bộ bài Mèo Nổ nguyên bản của dự án (tên, mô tả, minh hoạ tự thiết kế).
  * Đây là DỮ LIỆU — hiệu ứng được ánh xạ qua `effectType` tới handler phía server.
  */
-export type CatsExpansionId = 'base' | 'hon-loan';
-export type CatsCategory = 'exploding' | 'defuse' | 'action' | 'reaction' | 'collection';
+export type CatsExpansionId = 'base' | 'hon-loan' | 'tang-toc' | 'dao-boi' | 'hen-gio';
+export type CatsCategory = 'exploding' | 'defuse' | 'action' | 'reaction' | 'collection' | 'passive';
 export type TargetMode = 'self' | 'player' | 'all' | 'none';
 
 export interface CatsCardDefinition {
@@ -28,7 +28,7 @@ export const CAT_COLLECTION_IDS = ['cat_banh_bao', 'cat_tra_sua', 'cat_xoi_gac',
 const cat = (id: string, name: string, flavor: string): CatsCardDefinition => ({
   id,
   name,
-  description: `Lá mèo sưu tập. ${flavor} Đánh 2 lá giống nhau để cướp ngẫu nhiên 1 lá của người khác, 3 lá giống nhau để đòi đúng lá bạn muốn.`,
+  description: `Lá mèo sưu tập. ${flavor} Đánh 2 lá giống nhau để chọn 1 lá úp trên tay người khác và lấy về, 3 lá giống nhau để gọi tên đúng lá bạn muốn.`,
   imageKey: `cats.${id}`,
   category: 'collection',
   expansionId: 'base',
@@ -38,6 +38,29 @@ const cat = (id: string, name: string, flavor: string): CatsCardDefinition => ({
   requiresChoice: false,
   count: 4,
   nopeable: true,
+});
+
+const ext = (
+  expansionId: CatsExpansionId,
+  id: string,
+  name: string,
+  description: string,
+  count: number,
+  opts: Partial<CatsCardDefinition> = {},
+): CatsCardDefinition => ({
+  id,
+  name,
+  description,
+  imageKey: `cats.${id}`,
+  category: 'action',
+  expansionId,
+  effectType: id,
+  targetMode: 'none',
+  requiresTarget: false,
+  requiresChoice: false,
+  count,
+  nopeable: true,
+  ...opts,
 });
 
 export const CATS_CARDS: CatsCardDefinition[] = [
@@ -215,6 +238,116 @@ export const CATS_CARDS: CatsCardDefinition[] = [
     count: 3,
     nopeable: true,
   },
+  ext(
+    'hon-loan',
+    'feral_cat',
+    'Mèo Hoang',
+    'Lá mèo "joker": ghép được với bất kỳ lá mèo sưu tập nào để tạo cặp hoặc bộ ba.',
+    4,
+    { category: 'collection', effectType: 'cat_combo', targetMode: 'player', requiresTarget: true },
+  ),
+  ext(
+    'hon-loan',
+    'imploding',
+    'Mèo Sập Nguồn',
+    'Lần đầu bị rút: người rút lật NGỬA lá này rồi nhét lại bất kỳ đâu trong chồng bài (cả bàn thấy vị trí). Lần thứ hai bị rút: người rút bị loại ngay, không thể Gỡ Bom hay "Không!".',
+    1,
+    { category: 'exploding', effectType: 'implode', targetMode: 'none', requiresChoice: true, nopeable: false },
+  ),
+  // ---- Bộ mở rộng "Tăng Tốc" ----
+  ext('tang-toc', 'super_skip', 'Siêu Né', 'Kết thúc TẤT CẢ các lượt bạn đang phải chơi mà không rút bài (kể cả khi đang bị tấn công).', 2),
+  ext(
+    'tang-toc',
+    'streaking',
+    'Mèo Liều',
+    'Khi lá này còn trên tay, rút phải Mèo Nổ thì bạn được bí mật giữ nó trên tay thay vì nổ. Nếu Mèo Liều rời tay mà bạn vẫn giữ Mèo Nổ thì phải Gỡ Bom ngay hoặc bị loại.',
+    1,
+    { category: 'passive', effectType: 'passive', targetMode: 'self', nopeable: false },
+  ),
+  ext('tang-toc', 'swap_top_bottom', 'Đổi Đầu Đuôi', 'Đổi chỗ lá trên cùng và lá dưới cùng của chồng bài.', 3),
+  ext(
+    'tang-toc',
+    'catomic',
+    'Bom Nguyên Tử',
+    'Gom mọi Mèo Nổ trong chồng bài, xáo phần còn lại rồi đặt tất cả Mèo Nổ lên trên cùng. Kết thúc lượt mà không rút bài.',
+    1,
+  ),
+  ext(
+    'tang-toc',
+    'garbage',
+    'Dọn Rác',
+    'Mọi người còn sống (kể cả bạn) chọn 1 lá trên tay xáo vào chồng bài.',
+    2,
+    { targetMode: 'all', requiresChoice: true },
+  ),
+  ext(
+    'tang-toc',
+    'mark',
+    'Đánh Dấu',
+    'Chọn một người: 1 lá ngẫu nhiên trên tay họ bị lật ngửa cho cả bàn thấy cho tới khi rời khỏi tay họ.',
+    3,
+    { targetMode: 'player', requiresTarget: true },
+  ),
+  // ---- Bộ mở rộng "Đào Bới" ----
+  ext(
+    'dao-boi',
+    'bury',
+    'Chôn Bài',
+    'Kết thúc lượt bằng cách rút lá trên cùng, xem bí mật rồi chôn nó vào bất kỳ đâu trong chồng bài (kể cả Mèo Nổ — chôn được thì không nổ).',
+    4,
+    { targetMode: 'self', requiresChoice: true },
+  ),
+  ext('dao-boi', 'personal_attack', 'Tự Tấn Công', 'Tự tấn công chính mình: bạn phải chơi thêm 2 lượt liên tiếp (tổng cộng 3 lượt).', 4, { targetMode: 'self' }),
+  ext(
+    'dao-boi',
+    'potluck',
+    'Góp Lẩu',
+    'Bắt đầu từ bạn theo chiều chơi, mỗi người chọn 1 lá trên tay úp lên trên cùng chồng bài.',
+    2,
+    { targetMode: 'all', requiresChoice: true },
+  ),
+  ext(
+    'dao-boi',
+    'share_future',
+    'Chia Sẻ Tương Lai',
+    'Bí mật xem và sắp xếp lại 3 lá trên cùng, sau đó cho người chơi kế tiếp xem 3 lá đó.',
+    3,
+    { targetMode: 'self', requiresChoice: true },
+  ),
+  ext(
+    'dao-boi',
+    'dig_deeper',
+    'Đào Sâu',
+    'Kết thúc lượt: xem lá trên cùng rồi chọn giữ lá đó, hoặc trả nó về chỗ cũ và rút lá ngay bên dưới.',
+    3,
+    { targetMode: 'self', requiresChoice: true },
+  ),
+  // ---- Bộ mở rộng "Hẹn Giờ" ----
+  ext(
+    'hen-gio',
+    'time_bomb',
+    'Mèo Hẹn Giờ',
+    'Ai rút phải thì đặt ngửa trước mặt và bắt đầu đếm ngược. Hết số lượt (của chính người đang giữ) mà vẫn chưa chuyền đi được thì phát nổ: có Gỡ Bom thì vô hiệu hoá, không có thì bị loại.',
+    1,
+    { category: 'exploding', effectType: 'time_bomb', targetMode: 'none', nopeable: false },
+  ),
+  ext(
+    'hen-gio',
+    'pass_bomb',
+    'Chuyền Bom',
+    'Chuyền Mèo Hẹn Giờ bạn đang giữ cho người chơi khác. Số lượt còn lại giữ nguyên.',
+    3,
+    { targetMode: 'player', requiresTarget: true },
+  ),
+  ext('hen-gio', 'fast_forward', 'Tua Nhanh', 'Mọi Mèo Hẹn Giờ đang đếm ngược bị trừ ngay 1 lượt — có thể nổ luôn!', 2),
+  ext(
+    'hen-gio',
+    'take_that',
+    'Ta Lấy Nhé',
+    'Chọn một người: lá tiếp theo họ rút sẽ về tay bạn thay vì họ — kể cả Mèo Nổ!',
+    3,
+    { targetMode: 'player', requiresTarget: true },
+  ),
 ];
 
 export const CATS_CARD_BY_ID: Record<string, CatsCardDefinition> = Object.fromEntries(CATS_CARDS.map((c) => [c.id, c]));
@@ -224,7 +357,25 @@ export const CATS_EXPANSIONS: { id: CatsExpansionId; name: string; description: 
   {
     id: 'hon-loan',
     name: 'Mở rộng: Hỗn Loạn',
-    description: 'Thêm Quay Xe, Rút Đáy, Sắp Đặt Tương Lai và Tấn Công Chỉ Định.',
+    description: 'Quay Xe, Rút Đáy, Sắp Đặt Tương Lai, Tấn Công Chỉ Định, Mèo Hoang (joker) và Mèo Sập Nguồn lật ngửa.',
+    optional: true,
+  },
+  {
+    id: 'tang-toc',
+    name: 'Mở rộng: Tăng Tốc',
+    description: 'Siêu Né, Mèo Liều (giữ bom trên tay), Đổi Đầu Đuôi, Bom Nguyên Tử, Dọn Rác và Đánh Dấu. Thêm 1 Mèo Nổ.',
+    optional: true,
+  },
+  {
+    id: 'hen-gio',
+    name: 'Mở rộng: Hẹn Giờ',
+    description: 'Mèo Hẹn Giờ đếm ngược trước mặt người giữ, Chuyền Bom, Tua Nhanh và Ta Lấy Nhé (giành lá người khác sắp rút).',
+    optional: true,
+  },
+  {
+    id: 'dao-boi',
+    name: 'Mở rộng: Đào Bới',
+    description: 'Chôn Bài, Tự Tấn Công, Góp Lẩu, Chia Sẻ Tương Lai và Đào Sâu.',
     optional: true,
   },
 ];

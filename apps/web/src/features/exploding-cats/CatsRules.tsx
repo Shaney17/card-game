@@ -31,6 +31,8 @@ export function CatsRules({ config }: { config: unknown }) {
       <ul>
         <li>Hết {Math.round(c.turnTimeMs / 1000)} giây mà chưa rút, hệ thống sẽ rút thay bạn.</li>
         <li>{c.attackStacking ? 'Tấn Công cộng dồn: nếu bạn đang bị tấn công mà đánh Tấn Công, người kế tiếp phải chơi số lượt còn lại của bạn cộng 2.' : 'Tấn Công không cộng dồn: người kế tiếp luôn chơi 2 lượt.'}</li>
+        <li>Cặp mèo (2 lá giống nhau, Mèo Hoang thay được mọi mèo): bạn chọn 1 lá úp trên tay người bị nhắm — thứ tự đã được xáo nên không đoán được.</li>
+        <li>Bài trên tay có thể kéo để đổi chỗ (điện thoại: nhấn giữ rồi kéo) hoặc bật "Tự xếp".</li>
         <li>Rời bàn giữa ván sẽ bị loại khỏi ván đó.</li>
         <li>{c.disconnectPolicy === 'eliminate' ? 'Mất kết nối quá lâu sẽ bị loại.' : 'Mất kết nối thì hệ thống tự rút bài khi hết giờ lượt.'}</li>
       </ul>

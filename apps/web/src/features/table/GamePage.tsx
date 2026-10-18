@@ -134,8 +134,10 @@ function GameTablePage({ meta }: { meta: GameMeta }) {
     if (inRound) return null;
     if (!seated) return full ? 'Bàn đã đủ chỗ. Chờ ai đó rời bàn nhé.' : 'Bấm "Tham gia bàn" để ngồi vào chiếu.';
     if (view.startBlocker) return view.startBlocker;
-    const notReady = view.seats.filter((s) => !s.ready && !s.leaving).length;
-    return notReady ? `Chờ ${notReady} người sẵn sàng — đủ là chia bài.` : 'Đang chia bài…';
+    const notReady = view.seats.filter((s) => !s.ready && !s.leaving && s.connected).length;
+    const away = view.seats.filter((s) => !s.connected).length;
+    const awayNote = away ? ` (${away} người mất kết nối sẽ chờ ván sau)` : '';
+    return notReady ? `Chờ ${notReady} người sẵn sàng — đủ là chia bài${awayNote}.` : 'Đang chia bài…';
   })();
 
   return (

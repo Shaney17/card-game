@@ -60,7 +60,14 @@ export type CatsPendingView =
     }
   | { kind: 'favor'; giverId: string; receiverId: string; deadline: number }
   | { kind: 'defuse'; playerId: string; deadline: number; deckCount: number }
-  | { kind: 'alter'; playerId: string; deadline: number; cards: CatsCardInst[] | null };
+  | { kind: 'alter'; playerId: string; share: boolean; sharedWith: string | null; deadline: number; cards: CatsCardInst[] | null }
+  /** Cặp mèo: chọn 1 lá úp. `slots[i]` là lá đã bị Đánh Dấu (công khai) hoặc null nếu úp. */
+  | { kind: 'steal_pick'; actorId: string; targetId: string; deadline: number; slots: (string | null)[] }
+  | { kind: 'implode_place'; playerId: string; deadline: number; deckCount: number }
+  | { kind: 'garbage'; waitingFor: string[]; deadline: number }
+  | { kind: 'potluck'; currentId: string; queue: string[]; deadline: number }
+  | { kind: 'bury'; playerId: string; deadline: number; deckCount: number; cardDef: string | null }
+  | { kind: 'dig'; playerId: string; deadline: number; topDef: string | null };
 
 export interface CatsRoundView {
   phase: 'PLAYING' | 'ROUND_FINISHED';
@@ -70,12 +77,21 @@ export interface CatsRoundView {
   turnsRemaining: number;
   underAttack: boolean;
   deckCount: number;
-  bombsInDeck: number;
+  /** Số Mèo Nổ chưa nổ (trong chồng bài + đang bị giữ bí mật trên tay). */
+  bombsLeft: number;
+  /** Vị trí (tính từ trên, 0 = trên cùng) của Mèo Sập Nguồn đang lật ngửa, nếu có. */
+  implodingPos: number | null;
+  /** Mèo Hẹn Giờ đang đặt ngửa trước mặt người chơi (công khai). */
+  timeBombs: { holderId: string; turnsLeft: number }[];
+  /** "Ta Lấy Nhé": người bị nhắm → người sẽ nhận lá tiếp theo họ rút (công khai). */
+  claims: { targetId: string; claimerId: string }[];
   discardTop: string[];
   discardCount: number;
-  players: { id: string; nickname: string; cardCount: number; alive: boolean }[];
+  players: { id: string; nickname: string; cardCount: number; alive: boolean; marked: string[] }[];
   myHand: CatsCardInst[] | null;
-  seeFuture: { defs: string[]; seq: number } | null;
+  /** ID các lá trên tay bạn đang bị lộ (Đánh Dấu). */
+  myMarked: string[];
+  seeFuture: { defs: string[]; seq: number; from?: string } | null;
   pending: CatsPendingView | null;
   deadline: number | null;
   lastEvent: { seq: number; type: string; actorId?: string; targetId?: string; cardDefs?: string[] } | null;

@@ -5,7 +5,7 @@ Nền tảng game bài multiplayer realtime bằng tiếng Việt. Mỗi game c�
 | Game | Người chơi | Bàn cố định |
 |---|---|---|
 | **Sâm** (Sâm lốc 10 lá, tiền ảo) | 2–5 | `sam-main-table` |
-| **Mèo Nổ** (bộ bài nguyên bản + mở rộng "Hỗn Loạn") | 2–8 | `exploding-cats-main-table` |
+| **Mèo Nổ** (bộ bài nguyên bản + 4 bộ mở rộng Hỗn Loạn / Tăng Tốc / Đào Bới / Hẹn Giờ) | 2–8 | `exploding-cats-main-table` |
 
 Tiền trong game là tiền ảo, không có giá trị quy đổi.
 
@@ -76,7 +76,7 @@ pnpm exec playwright install chromium
 pnpm build && pnpm test:e2e
 ```
 
-- `playwright.config.ts` tự khởi động server (`webServer`) với `ADMIN_PASSWORD=e2e-admin` và `DATA_FILE` là file SQLite tạm trong thư mục tmp của hệ điều hành — không đụng tới `data/`. Cổng 3001 phải trống (tắt `pnpm dev`/`pnpm start` trước khi chạy).
+- `playwright.config.ts` tự khởi động server (`webServer`) với `ADMIN_PASSWORD=e2e-admin` và `DATA_FILE` là file SQLite tạm trong thư mục tmp của hệ điều hành — không đụng tới `data/`. Cổng 3001 phải trống; nếu đang chạy `pnpm dev`, đặt cổng khác bằng `E2E_PORT`, ví dụ `E2E_PORT=3102 pnpm test:e2e`.
 - Mỗi browser context là một danh tính riêng (token nằm trong localStorage). Chỗ ngồi được lấp thêm bằng client Socket.IO trần (`tests/e2e/helpers.ts`).
 - `tests/e2e/home.spec.ts` — trang chủ có Sâm, Mèo Nổ và mục "Sắp ra mắt".
 - `tests/e2e/sam.spec.ts` — bàn đủ 5 người từ chối người thứ 6; đặt biệt danh, vào bàn, sẵn sàng, mỗi người thấy đúng 10 lá của mình và không có bài đối thủ trong DOM; đánh một lá và người kia thấy trên bàn; tải lại trang giữa ván vẫn giữ chỗ và bài. Trước khi chia bài, test dùng kênh quản trị tắt "ăn trắng" để ván không tình cờ kết thúc ngay khi chia.

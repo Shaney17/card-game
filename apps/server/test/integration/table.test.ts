@@ -229,3 +229,19 @@ describe('Khôi phục sau khi máy chủ khởi động lại', () => {
     expect(t2.view(a.id, false).seats.find((s) => s.player.id === a.id)?.connected).toBe(true);
   });
 });
+
+describe('Sẵn sàng khi có người mất kết nối', () => {
+  it('người mất kết nối không chặn ván; họ chờ ván sau', () => {
+    const { table, players } = makeTable('sam');
+    for (let i = 0; i < 3; i++) table.join(players[i].id);
+    table.setReady(players[2].id, true);
+    table.setConnected(players[2].id, false);
+    const seat2 = () => table.view(null, false).seats.find((s) => s.player.id === players[2].id)!;
+    expect(seat2().ready).toBe(false);
+    table.setReady(players[0].id, true);
+    table.setReady(players[1].id, true);
+    expect(table.status).toBe('PLAYING');
+    expect((table.view(null, false).round!.view as { players: unknown[] }).players).toHaveLength(2);
+    expect(seat2().waitingNextRound).toBe(true);
+  });
+});

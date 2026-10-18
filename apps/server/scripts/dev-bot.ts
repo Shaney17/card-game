@@ -25,7 +25,9 @@ const NAMES = ['Bot Bánh Bao', 'Bot Trà Sữa', 'Bot Xôi Gấc', 'Bot Phở B
 const AVATARS = ['cho-shiba', 'gau-truc', 'tho-hong', 'cao-lua', 'ech-com', 'cu-meo', 'heo-dat'];
 
 function startBot(i: number) {
-  const socket = io(url, { transports: ['websocket'] });
+  // Giữ token để khi kết nối lại (server khởi động lại) vẫn là cùng một người chơi.
+  let token: string | undefined;
+  const socket = io(url, { transports: ['websocket'], auth: (cb) => cb({ token }) });
   let busy = false;
   let lastKey = '';
   const call = (ev: string, payload?: unknown) => new Promise<Ack>((r) => socket.emit(ev, payload, r));
@@ -41,7 +43,8 @@ function startBot(i: number) {
     });
 
   socket.on('connect', async () => {
-    await call(EV.hello);
+    const hello = await call(EV.hello);
+    if (hello.ok) token = (hello.data as { token: string }).token;
     await call(EV.profile, { nickname: NAMES[i % NAMES.length], avatar: AVATARS[i % AVATARS.length] });
     await call(EV.tableWatch, { gameId });
     const r = await call(EV.tableJoin, { gameId });
@@ -102,9 +105,32 @@ function startBot(i: number) {
     if (p?.kind === 'favor' && p.giverId === meId && hand.length) return act(view, 'giveFavor', { cardId: hand[0].id });
     if (p?.kind === 'defuse' && p.playerId === meId) return act(view, 'placeBomb', { position: Math.floor(Math.random() * (p.deckCount + 1)) });
     if (p?.kind === 'alter' && p.playerId === meId && p.cards) return act(view, 'alterFuture', { order: p.cards.map((c) => c.id) });
+    const rnd = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
+    if (p?.kind === 'steal_pick' && p.actorId === meId) return act(view, 'pickSteal', { index: Math.floor(Math.random() * p.slots.length) });
+    if (p?.kind === 'implode_place' && p.playerId === meId) return act(view, 'placeImploding', { position: p.deckCount });
+    if (p?.kind === 'bury' && p.playerId === meId) return act(view, 'buryCard', { position: Math.floor(Math.random() * (p.deckCount + 1)) });
+    if (p?.kind === 'dig' && p.playerId === meId) return act(view, 'digChoice', { keep: p.topDef !== 'exploding' && p.topDef !== 'imploding' });
+    const junk = hand.filter((c) => c.def !== 'defuse' && c.def !== 'streaking');
+    if (p?.kind === 'garbage' && meId && p.waitingFor.includes(meId) && hand.length) return act(view, 'garbageCard', { cardId: rnd(junk.length ? junk : hand).id });
+    if (p?.kind === 'potluck' && p.currentId === meId && hand.length) return act(view, 'potluckCard', { cardId: rnd(junk.length ? junk : hand).id });
     if (p || r.currentId !== meId) return;
-    const skip = hand.find((c) => c.def === 'skip' || c.def === 'attack');
-    if (skip && Math.random() < 0.35) return act(view, 'play', { cardIds: [skip.id] });
+    const others0 = r.players.filter((x) => x.alive && x.id !== meId);
+    const passBomb = hand.find((c) => c.def === 'pass_bomb');
+    if (passBomb && r.timeBombs.some((b) => b.holderId === meId) && others0.length) {
+      return act(view, 'play', { cardIds: [passBomb.id], targetId: others0[Math.floor(Math.random() * others0.length)].id });
+    }
+    const takeThat = hand.find((c) => c.def === 'take_that');
+    const free = others0.filter((x) => !r.claims.some((c) => c.targetId === x.id));
+    if (takeThat && free.length && Math.random() < 0.3) return act(view, 'play', { cardIds: [takeThat.id], targetId: free[0].id });
+    const simple = hand.filter((c) =>
+      ['skip', 'attack', 'shuffle', 'see_future', 'super_skip', 'swap_top_bottom', 'garbage', 'potluck', 'bury', 'dig_deeper', 'catomic', 'reverse'].includes(c.def),
+    );
+    if (simple.length && Math.random() < 0.4) return act(view, 'play', { cardIds: [simple[Math.floor(Math.random() * simple.length)].id] });
+    const others = r.players.filter((x) => x.alive && x.id !== meId && x.cardCount > 0);
+    const byDef = new Map<string, string[]>();
+    for (const c of hand) if (c.def.startsWith('cat_') || c.def === 'feral_cat') byDef.set(c.def, [...(byDef.get(c.def) ?? []), c.id]);
+    const pair = [...byDef.values()].find((ids) => ids.length >= 2);
+    if (pair && others.length && Math.random() < 0.5) return act(view, 'play', { cardIds: pair.slice(0, 2), targetId: others[0].id });
     return act(view, 'draw');
   }
 }

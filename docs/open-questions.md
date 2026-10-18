@@ -22,7 +22,14 @@ Các lựa chọn dưới đây được chọn để có bản chạy được 
 
 ## Mèo Nổ
 - Có muốn mô phỏng đúng một bản thương mại cụ thể không (tên/luật/số lượng)? Nếu có cần xác định phiên bản & quyền sử dụng.
-- Cặp 2 lá: chỉ mèo sưu tập (hiện tại) hay mọi lá giống nhau?
+- Cặp 2 lá: chỉ mèo sưu tập + Mèo Hoang (hiện tại) hay mọi lá giống nhau?
+- Bộ ba gồm toàn Mèo Hoang có hợp lệ không? — _Hiện: có._
+- Bom Nguyên Tử khi đang bị tấn công: kết thúc 1 lượt (hiện tại) hay toàn bộ lượt?
+- Chôn Bài với Mèo Sập Nguồn đã lật ngửa ở trên cùng: hiện coi là rút bài → bị loại.
+- Mèo Liều: có được gọi tên "Mèo Nổ" trong bộ ba để lấy bom của người khác không? — _Hiện: không cho gọi tên Mèo Nổ/Mèo Sập Nguồn._
+- Mèo Hẹn Giờ: đếm theo lượt của người giữ (hiện tại) hay theo mọi lượt của cả bàn? Gỡ Bom có nên cho nhét bom hẹn giờ lại chồng bài thay vì vô hiệu?
+- Ta Lấy Nhé: có được "Không!" khi mục tiêu đang rút không (hiện chỉ chặn được lúc đánh lá)?
+- Ngưỡng rút gọn chồng bài `max(12, số người × 5)` có phù hợp không?
 - Combo 5 mèo khác nhau (lấy lá từ chồng bỏ) — _chưa triển khai._
 - Chính sách người chơi rời giữa ván: hiện là bị loại ngay; có cần giữ chỗ cho kết nối lại lâu hơn không?
 

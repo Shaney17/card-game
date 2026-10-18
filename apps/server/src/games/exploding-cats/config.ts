@@ -5,13 +5,20 @@ export const catsConfigSchema = z
   .object({
     maxPlayers: z.number().int().min(2).max(8),
     /** Bộ mở rộng tuỳ chọn được bật (bộ cơ bản luôn bật). */
-    expansions: z.array(z.enum(['hon-loan'])).max(1),
+    expansions: z
+      .array(z.enum(['hon-loan', 'tang-toc', 'dao-boi', 'hen-gio']))
+      .max(4)
+      .refine((a) => new Set(a).size === a.length, 'Bộ mở rộng bị trùng'),
     /** Số lá thường chia cho mỗi người (chưa tính 1 lá Gỡ Bom). */
     handSize: z.number().int().min(4).max(8),
+    /** Rút gọn chồng bài: sau khi chia chỉ giữ lại tối đa (số người × 5, ít nhất 12) lá thường để ván không quá dài. */
+    trimDeck: z.boolean(),
     /** Số Gỡ Bom thêm vào chồng bài sau khi chia. */
     extraDefuses: z.number().int().min(0).max(6),
     /** Số bộ bài dùng chung: "auto" = 2 bộ khi trên 5 người. */
     deckCopies: z.union([z.literal('auto'), z.literal(1), z.literal(2)]),
+    /** Số lượt (của người đang giữ) trước khi Mèo Hẹn Giờ phát nổ. */
+    timeBombTurns: z.number().int().min(1).max(6),
     /** Tấn Công cộng dồn khi người bị tấn công đánh tiếp Tấn Công. */
     attackStacking: z.boolean(),
     turnTimeMs: z.number().int().min(10_000).max(180_000),
@@ -32,11 +39,13 @@ export const CATS_DEFAULT_CONFIG: CatsConfig = {
   maxPlayers: 8,
   expansions: [],
   handSize: 7,
+  trimDeck: true,
   extraDefuses: 2,
   deckCopies: 'auto',
+  timeBombTurns: 3,
   attackStacking: true,
   turnTimeMs: 45_000,
-  nopeWindowMs: 4_000,
+  nopeWindowMs: 6_000,
   choiceTimeMs: 20_000,
   disconnectPolicy: 'eliminate',
   disconnectTimeoutMs: 60_000,

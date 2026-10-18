@@ -85,11 +85,13 @@ const CATS_FIELDS: Group[] = [
   {
     title: 'Bộ bài',
     fields: [
-      { key: 'expansions', label: 'Bộ mở rộng', kind: 'multi', options: [['hon-loan', 'Hỗn Loạn']] },
+      { key: 'expansions', label: 'Bộ mở rộng', kind: 'multi', options: [['hon-loan', 'Hỗn Loạn'], ['tang-toc', 'Tăng Tốc'], ['dao-boi', 'Đào Bới'], ['hen-gio', 'Hẹn Giờ']] },
       { key: 'deckCopies', label: 'Số bộ bài', kind: 'select', options: [['auto', 'Tự động (2 bộ khi trên 5 người)'], [1, '1 bộ'], [2, '2 bộ']] },
       { key: 'handSize', label: 'Số lá chia mỗi người (chưa tính Gỡ Bom)', kind: 'int', min: 4, max: 8 },
+      { key: 'trimDeck', label: 'Rút gọn chồng bài theo số người (ván ngắn hơn)', kind: 'bool' },
       { key: 'extraDefuses', label: 'Gỡ Bom thêm vào chồng bài', kind: 'int', min: 0, max: 6 },
       { key: 'attackStacking', label: 'Tấn Công cộng dồn', kind: 'bool' },
+      { key: 'timeBombTurns', label: 'Mèo Hẹn Giờ nổ sau (lượt của người giữ)', kind: 'int', min: 1, max: 6 },
     ],
   },
 ];
