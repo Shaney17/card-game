@@ -64,6 +64,26 @@ pnpm test
 pnpm typecheck
 ```
 
+### End-to-end (Playwright)
+
+Chạy trên trình duyệt thật với server thật phục vụ bản build web tại :3001. Lần đầu cần tải Chromium:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+```bash
+pnpm build && pnpm test:e2e
+```
+
+- `playwright.config.ts` tự khởi động server (`webServer`) với `ADMIN_PASSWORD=e2e-admin` và `DATA_FILE` là file SQLite tạm trong thư mục tmp của hệ điều hành — không đụng tới `data/`. Cổng 3001 phải trống (tắt `pnpm dev`/`pnpm start` trước khi chạy).
+- Mỗi browser context là một danh tính riêng (token nằm trong localStorage). Chỗ ngồi được lấp thêm bằng client Socket.IO trần (`tests/e2e/helpers.ts`).
+- `tests/e2e/home.spec.ts` — trang chủ có Sâm, Mèo Nổ và mục "Sắp ra mắt".
+- `tests/e2e/sam.spec.ts` — bàn đủ 5 người từ chối người thứ 6; đặt biệt danh, vào bàn, sẵn sàng, mỗi người thấy đúng 10 lá của mình và không có bài đối thủ trong DOM; đánh một lá và người kia thấy trên bàn; tải lại trang giữa ván vẫn giữ chỗ và bài. Trước khi chia bài, test dùng kênh quản trị tắt "ăn trắng" để ván không tình cờ kết thúc ngay khi chia.
+- `tests/e2e/exploding-cats.spec.ts` — hai người vào bàn Mèo Nổ, rút bài (giấu bom nếu rút trúng Mèo Nổ) và lượt chuyển sang người kia.
+
+Vì mỗi game chỉ có một bàn dùng chung, test chạy tuần tự với một worker. Khi lỗi, trace và ảnh chụp nằm trong `test-results/`; xem bằng `pnpm exec playwright show-trace <đường dẫn trace.zip>`.
+
 ## Kiến trúc
 
 ```
