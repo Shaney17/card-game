@@ -42,13 +42,13 @@ const expectRule = (fn: () => unknown, msg?: RegExp) => {
 describe('Mèo Nổ — bộ bài', () => {
   it('kiểm tra bộ bài tương thích với số người', () => {
     expect(typeof planDeck({ ...CATS_DEFAULT_CONFIG, deckCopies: 1 }, 5)).toBe('object');
-    expect(planDeck({ ...CATS_DEFAULT_CONFIG, deckCopies: 1 }, 7)).toMatch(/Gỡ Bom|Mèo Nổ|không đủ/);
+    expect(planDeck({ ...CATS_DEFAULT_CONFIG, deckCopies: 1 }, 7)).toMatch(/Gỡ Bom/);
     expect(typeof planDeck(CATS_DEFAULT_CONFIG, 8)).toBe('object'); // auto = 2 bộ
     expect(catsEngine.validateStart(CATS_DEFAULT_CONFIG, 1)).toMatch(/ít nhất 2/);
   });
 
   it('chia đúng: mỗi người 1 Gỡ Bom + handSize lá, chồng bài có (n-1) Mèo Nổ', () => {
-    const { hands, deck } = buildAndDeal(CATS_DEFAULT_CONFIG, 4, seededRng(3));
+    const { hands, deck } = buildAndDeal({ ...CATS_DEFAULT_CONFIG, expansions: [], extraBombs: 0 }, 4, seededRng(3));
     for (const h of hands) {
       expect(h).toHaveLength(8);
       expect(h.filter((c) => c.def === 'defuse')).toHaveLength(1);
@@ -60,7 +60,7 @@ describe('Mèo Nổ — bộ bài', () => {
   });
 
   it('bộ mở rộng chỉ xuất hiện khi được bật', () => {
-    const base = buildAndDeal(CATS_DEFAULT_CONFIG, 3, seededRng(1));
+    const base = buildAndDeal({ ...CATS_DEFAULT_CONFIG, expansions: [] }, 3, seededRng(1));
     const all = [...base.hands.flat(), ...base.deck].map((c) => c.def);
     expect(all).not.toContain('reverse');
     const ext = buildAndDeal({ ...CATS_DEFAULT_CONFIG, expansions: ['hon-loan'] }, 3, seededRng(1));
@@ -77,7 +77,7 @@ describe('Mèo Nổ — lượt chơi', () => {
     expect(s.players.p0.hand.map((c) => c.def)).toEqual(['skip', 'cat_pho_bo']);
   });
 
-  it('Né Lượt kết thúc lượt mà không rút', () => {
+  it('Qua Lượt kết thúc lượt mà không rút', () => {
     let s = setup(['skip', 'skip'], 'cat_pho_bo cat_pho_bo');
     s = act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'skip') });
     expect(s.pending?.kind).toBe('action');
@@ -154,7 +154,7 @@ describe('Mèo Nổ — "Không!"', () => {
     s = act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'skip') });
     s = act(s, 'p1', 'nope', { cardId: handIds(s, 'p1', 'nope')[0] });
     s = passAll(s);
-    expect(s.currentId).toBe('p0'); // Né Lượt bị hủy
+    expect(s.currentId).toBe('p0'); // Qua Lượt bị hủy
     expect(s.pending).toBeNull();
 
     let t = setup(['skip', 'nope', 'nope'], 'cat_pho_bo cat_pho_bo cat_pho_bo');
@@ -162,7 +162,7 @@ describe('Mèo Nổ — "Không!"', () => {
     t = act(t, 'p1', 'nope', { cardId: handIds(t, 'p1', 'nope')[0] });
     t = act(t, 'p2', 'nope', { cardId: handIds(t, 'p2', 'nope')[0] });
     t = passAll(t);
-    expect(t.currentId).toBe('p1'); // Né Lượt có hiệu lực
+    expect(t.currentId).toBe('p1'); // Qua Lượt có hiệu lực
   });
 
   it('không tự chặn lá của mình, không chặn khi không có hành động', () => {
@@ -190,7 +190,7 @@ describe('Mèo Nổ — "Không!"', () => {
 });
 
 describe('Mèo Nổ — mục tiêu & combo', () => {
-  it('Xin Xỏ: mục tiêu chọn lá đưa', () => {
+  it('Thiện Ý: mục tiêu chọn lá đưa', () => {
     let s = setup(['favor', 'cat_pho_bo attack'], 'skip');
     expectRule(() => act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'favor') }), /mục tiêu/);
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'favor'), targetId: 'p1' }));
@@ -241,7 +241,7 @@ describe('Mèo Nổ — mục tiêu & combo', () => {
 });
 
 describe('Mèo Nổ — thông tin riêng tư', () => {
-  it('Mắt Thần chỉ cho người đánh thấy 3 lá trên cùng', () => {
+  it('Xem Trước Tương Lai chỉ cho người đánh thấy 3 lá trên cùng', () => {
     let s = setup(['see_future', 'skip'], 'attack exploding skip cat_pho_bo');
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'see_future') }));
     const v0 = catsEngine.projectView(s, 'p0') as any;
@@ -264,21 +264,21 @@ describe('Mèo Nổ — thông tin riêng tư', () => {
 
 describe('Mèo Nổ — bộ mở rộng Hỗn Loạn', () => {
   const ext = { expansions: ['hon-loan' as const] };
-  it('Quay Xe đảo chiều', () => {
+  it('Đổi Chiều đảo chiều', () => {
     let s = setup(['reverse', 'skip', 'skip'], 'cat_pho_bo cat_pho_bo', ext);
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'reverse') }));
     expect(s.direction).toBe(-1);
     expect(s.currentId).toBe('p2');
   });
 
-  it('Rút Đáy lấy lá dưới cùng', () => {
+  it('Rút Từ Đáy lấy lá dưới cùng', () => {
     let s = setup(['draw_bottom', 'skip'], 'exploding cat_pho_bo', ext);
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'draw_bottom') }));
     expect(s.players.p0.hand.map((c) => c.def)).toEqual(['cat_pho_bo']);
     expect(s.players.p0.alive).toBe(true);
   });
 
-  it('Sắp Đặt Tương Lai đổi thứ tự 3 lá trên cùng', () => {
+  it('Biến Đổi Tương Lai đổi thứ tự 3 lá trên cùng', () => {
     let s = setup(['alter_future', 'skip'], 'exploding skip attack favor', ext);
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'alter_future') }));
     expect(s.pending?.kind).toBe('alter');
@@ -288,7 +288,7 @@ describe('Mèo Nổ — bộ mở rộng Hỗn Loạn', () => {
     expect(s.deck.map((c) => c.def)).toEqual(['attack', 'skip', 'exploding', 'favor']);
   });
 
-  it('Tấn Công Chỉ Định chuyển lượt cho mục tiêu', () => {
+  it('Tấn Công Mục Tiêu chuyển lượt cho mục tiêu', () => {
     let s = setup(['targeted_attack', 'skip', 'skip', 'skip'], 'cat_pho_bo', ext);
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'targeted_attack'), targetId: 'p2' }));
     expect(s.currentId).toBe('p2');
@@ -304,7 +304,7 @@ describe('Mèo Nổ — rời ván', () => {
     expect(s.currentId).toBe('p1');
   });
 
-  it('người phải đưa bài rời ván thì Xin Xỏ mất tác dụng', () => {
+  it('người phải đưa bài rời ván thì Thiện Ý mất tác dụng', () => {
     let s = setup(['favor', 'skip', 'skip'], 'cat_pho_bo');
     s = passAll(act(s, 'p0', 'play', { cardIds: handIds(s, 'p0', 'favor'), targetId: 'p1' }));
     s = catsEngine.onPlayerGone(s, 'p1', ctx(3000)).state;

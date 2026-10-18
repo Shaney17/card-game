@@ -29,7 +29,7 @@ import { buildAndDeal, copiesFor, enabledDefs, planDeck } from './deck';
 import { EFFECTS } from './effects';
 import type { CatsState, Pending, PlayIntent } from './state';
 
-export const CATS_RULES_VERSION = 'meo-no-2.1.0';
+export const CATS_RULES_VERSION = 'meo-no-2.2.0';
 
 const id = z.string().min(1).max(32);
 const position = z.object({ position: z.number().int().min(0).max(500) }).strict();
@@ -157,7 +157,7 @@ function placeImploding(s: CatsState, pos: number, ctx: EngineContext, logs: Eng
   s.pending = null;
   const shown = Math.max(0, Math.min(pos, s.deck.length - 1));
   logs.push({
-    text: `${nameOf(s, pending.playerId)} lật ngửa Mèo Sập Nguồn và đặt ở vị trí thứ ${shown + 1} từ trên xuống.`,
+    text: `${nameOf(s, pending.playerId)} lật ngửa Mèo Nổ Sập và đặt ở vị trí thứ ${shown + 1} từ trên xuống.`,
     kind: 'warn',
     sfx: 'place',
   });
@@ -246,7 +246,7 @@ function digChoice(s: CatsState, keep: boolean, ctx: EngineContext, logs: Engine
   if (!pending || pending.kind !== 'dig') return;
   s.pending = null;
   if (!keep) logs.push({ text: `${nameOf(s, pending.playerId)} bỏ qua lá trên cùng và đào xuống lá bên dưới.`, kind: 'info' });
-  drawCard(s, pending.playerId, keep || s.deck.length < 2 ? 'top' : 1, ctx.now, logs);
+  drawCard(s, pending.playerId, keep || s.deck.length < 2 ? 'top' : 1, ctx.now, logs, ctx.rng);
 }
 
 function finishAlter(s: CatsState, order: string[] | null, ctx: EngineContext, logs: EngineLog[]) {
@@ -312,11 +312,20 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
       eliminated: [],
     };
     const bombs = deck.filter((c) => c.def === 'exploding').length;
-    const implode =
-      (deck.some((c) => c.def === 'imploding') ? ', 1 Mèo Sập Nguồn' : '') + (deck.some((c) => c.def === 'time_bomb') ? ', 1 Mèo Hẹn Giờ' : '');
+    const countOf = (d: string) => deck.filter((c) => c.def === d).length;
+    const extra = [
+      ['imploding', 'Mèo Nổ Sập'],
+      ['time_bomb', 'Mèo Hẹn Giờ'],
+      ['chain_bomb', 'Mèo Nổ Dây Chuyền'],
+      ['smoke_bomb', 'Mèo Bom Khói'],
+      ['defuse', 'Gỡ Bom'],
+    ]
+      .filter(([d]) => countOf(d) > 0)
+      .map(([d, label]) => `, ${countOf(d)} ${label}`)
+      .join('');
     const logs: EngineLog[] = [
       {
-        text: `Chia mỗi người ${cfg.handSize} lá và 1 Gỡ Bom. Chồng bài có ${bombs} Mèo Nổ${implode} (${copiesFor(cfg, players.length)} bộ bài).`,
+        text: `Chia mỗi người ${cfg.handSize} lá và 1 Gỡ Bom. Chồng bài có ${bombs} Mèo Nổ${extra} (${copiesFor(cfg, players.length)} bộ bài).`,
         kind: 'info',
         sfx: 'deal',
       },
@@ -385,7 +394,7 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
         parse('draw', payload);
         if (pending) throw new GameRuleError('Hãy chờ hành động hiện tại được xử lý xong.');
         if (s.currentId !== playerId) throw new GameRuleError('Chưa đến lượt của bạn.', 'NOT_YOUR_TURN');
-        drawCard(s, playerId, 'top', ctx.now, logs);
+        drawCard(s, playerId, 'top', ctx.now, logs, ctx.rng);
         break;
       }
       case 'giveFavor': {
@@ -406,8 +415,8 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
       }
       case 'placeImploding': {
         const { position: pos } = parse('placeImploding', payload);
-        const p = requirePending(s, 'implode_place', 'Bạn không cần đặt Mèo Sập Nguồn lúc này.');
-        if (p.playerId !== playerId) throw new GameRuleError('Bạn không cần đặt Mèo Sập Nguồn lúc này.');
+        const p = requirePending(s, 'implode_place', 'Bạn không cần đặt Mèo Nổ Sập lúc này.');
+        if (p.playerId !== playerId) throw new GameRuleError('Bạn không cần đặt Mèo Nổ Sập lúc này.');
         if (pos > s.deck.length) throw new GameRuleError('Vị trí không hợp lệ.');
         placeImploding(s, pos, ctx, logs);
         break;
@@ -482,7 +491,7 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
     };
     if (!pending) {
       logs.push({ text: `${nameOf(s, s.currentId)} hết giờ — tự động rút bài.`, kind: 'info' });
-      drawCard(s, s.currentId, 'top', ctx.now, logs);
+      drawCard(s, s.currentId, 'top', ctx.now, logs, ctx.rng);
     } else if (pending.kind === 'action') {
       resolveAction(s, ctx, logs);
     } else if (pending.kind === 'favor') {
@@ -672,7 +681,8 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
       pendingView = { kind: 'dig', playerId: pending.playerId, deadline: pending.deadline, topDef: viewerId === pending.playerId ? (s.deck[0]?.def ?? null) : null };
     }
     const implodingIdx = s.deck.findIndex((c) => c.def === 'imploding' && c.faceUp);
-    const bombsInHands = Object.values(s.players).reduce((a, p) => a + p.hand.filter((c) => c.def === 'exploding').length, 0);
+    const lethal = (c: { def: string }) => c.def === 'exploding' || c.def === 'chain_bomb';
+    const bombsInHands = Object.values(s.players).reduce((a, p) => a + p.hand.filter(lethal).length, 0);
     return {
       phase: s.phase,
       order: s.order,
@@ -681,7 +691,7 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
       turnsRemaining: s.turnsRemaining,
       underAttack: s.underAttack,
       deckCount: s.deck.length,
-      bombsLeft: s.deck.filter((c) => c.def === 'exploding').length + bombsInHands,
+      bombsLeft: s.deck.filter(lethal).length + bombsInHands,
       implodingPos: implodingIdx >= 0 ? implodingIdx : null,
       timeBombs: s.timeBombs.map((b) => ({ holderId: b.holderId, turnsLeft: b.turnsLeft })),
       claims: Object.entries(s.claims).map(([targetId, claimerId]) => ({ targetId, claimerId })),

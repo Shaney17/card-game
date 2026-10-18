@@ -11,10 +11,12 @@ export const catsConfigSchema = z
       .refine((a) => new Set(a).size === a.length, 'Bộ mở rộng bị trùng'),
     /** Số lá thường chia cho mỗi người (chưa tính 1 lá Gỡ Bom). */
     handSize: z.number().int().min(4).max(8),
-    /** Rút gọn chồng bài: sau khi chia chỉ giữ lại tối đa (số người × 5, ít nhất 12) lá thường để ván không quá dài. */
+    /** Rút gọn chồng bài: chỉ giữ tối đa max(20, số người × 8) lá thường (ưu tiên giữ lá hành động) để ván không quá dài. */
     trimDeck: z.boolean(),
-    /** Số Gỡ Bom thêm vào chồng bài sau khi chia. */
-    extraDefuses: z.number().int().min(0).max(6),
+    /** Số Gỡ Bom nằm sẵn trong chồng bốc (tối đa 1 để không quá dễ). */
+    extraDefuses: z.number().int().min(0).max(1),
+    /** Số Mèo Nổ thêm so với mức cơ bản (số người − 1). */
+    extraBombs: z.number().int().min(0).max(4),
     /** Số bộ bài dùng chung: "auto" = 2 bộ khi trên 5 người. */
     deckCopies: z.union([z.literal('auto'), z.literal(1), z.literal(2)]),
     /** Số lượt (của người đang giữ) trước khi Mèo Hẹn Giờ phát nổ. */
@@ -24,7 +26,7 @@ export const catsConfigSchema = z
     turnTimeMs: z.number().int().min(10_000).max(180_000),
     /** Thời gian cho mọi người phản ứng bằng "Không!". */
     nopeWindowMs: z.number().int().min(2_000).max(10_000),
-    /** Thời gian cho các lựa chọn (Xin Xỏ, nhét bom, sắp đặt tương lai). */
+    /** Thời gian cho các lựa chọn (Thiện Ý, nhét bom, sắp đặt tương lai). */
     choiceTimeMs: z.number().int().min(5_000).max(60_000),
     /** Mất kết nối quá lâu: tự rút bài theo đồng hồ, hoặc bị loại. */
     disconnectPolicy: z.enum(['autoDraw', 'eliminate']),
@@ -37,10 +39,11 @@ export type CatsConfig = z.infer<typeof catsConfigSchema>;
 
 export const CATS_DEFAULT_CONFIG: CatsConfig = {
   maxPlayers: 8,
-  expansions: [],
+  expansions: ['hon-loan', 'tang-toc', 'dao-boi', 'hen-gio'],
   handSize: 7,
   trimDeck: true,
-  extraDefuses: 2,
+  extraDefuses: 1,
+  extraBombs: 1,
   deckCopies: 'auto',
   timeBombTurns: 3,
   attackStacking: true,
@@ -53,7 +56,9 @@ export const CATS_DEFAULT_CONFIG: CatsConfig = {
 };
 
 export function parseCatsConfig(input: unknown): ConfigParseResult<CatsConfig> {
-  const merged = { ...CATS_DEFAULT_CONFIG, ...(typeof input === 'object' && input ? input : {}) };
+  const merged = { ...CATS_DEFAULT_CONFIG, ...(typeof input === 'object' && input ? input : {}) } as Record<string, unknown>;
+  // Chuyển đổi cấu hình đã lưu từ phiên bản cũ (trước đây cho tới 6 Gỡ Bom trong chồng bốc).
+  if (typeof merged.extraDefuses === 'number' && merged.extraDefuses > 1) merged.extraDefuses = 1;
   const r = catsConfigSchema.safeParse(merged);
   if (!r.success) {
     const first = r.error.issues[0];

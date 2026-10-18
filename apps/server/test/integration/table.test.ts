@@ -175,9 +175,9 @@ describe('Bàn chơi cố định', () => {
   it('không thể bắt đầu khi bộ bài không hợp lệ, báo lỗi rõ ràng', () => {
     const { table, players } = makeTable('exploding-cats');
     expect(table.adminConfig({ deckCopies: 1, handSize: 8 }).ok).toBe(true);
-    for (let i = 0; i < 6; i++) table.join(players[i].id);
+    for (let i = 0; i < 7; i++) table.join(players[i].id);
     expect(table.startBlocker()).toMatch(/Hãy tăng số bộ bài/);
-    for (let i = 0; i < 6; i++) table.setReady(players[i].id, true);
+    for (let i = 0; i < 7; i++) table.setReady(players[i].id, true);
     expect(table.status).not.toBe('PLAYING');
   });
 

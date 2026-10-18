@@ -6,17 +6,18 @@ import { seededRng } from '../../src/security/rng';
 import { act, ctx, deckDefs, defs, expectRule, ids, passAll, playAndResolve, setup } from './helpers';
 
 describe('Bộ bài với các bản mở rộng', () => {
-  it('số Mèo Nổ: +1 với Tăng Tốc, −1 (thay bằng Mèo Sập Nguồn) với Hỗn Loạn', () => {
-    const base = planDeck({ ...CATS_DEFAULT_CONFIG, expansions: [] }, 4);
-    const streak = planDeck({ ...CATS_DEFAULT_CONFIG, expansions: ['tang-toc'] }, 4);
-    const implode = planDeck({ ...CATS_DEFAULT_CONFIG, expansions: ['hon-loan'] }, 4);
+  it('số Mèo Nổ: +1 với Tăng Tốc, −1 (thay bằng Mèo Nổ Sập) với Hỗn Loạn', () => {
+    const cfg = { ...CATS_DEFAULT_CONFIG, extraBombs: 0 };
+    const base = planDeck({ ...cfg, expansions: [] }, 4);
+    const streak = planDeck({ ...cfg, expansions: ['tang-toc'] }, 4);
+    const implode = planDeck({ ...cfg, expansions: ['hon-loan'] }, 4);
     expect(base).toMatchObject({ bombs: 3, imploding: 0 });
     expect(streak).toMatchObject({ bombs: 4, imploding: 0 });
     expect(implode).toMatchObject({ bombs: 2, imploding: 1 });
   });
 
   it('chia bài đủ cả 3 bản mở rộng cho 8 người, mọi lá mới đều có mặt', () => {
-    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hon-loan', 'tang-toc', 'dao-boi'] as never };
+    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hon-loan', 'tang-toc', 'dao-boi', 'hen-gio'] as never, trimDeck: false };
     expect(planDeck(cfg, 8)).not.toBeTypeOf('string');
     const { hands, deck } = buildAndDeal(cfg, 8, seededRng(9));
     const all = new Set([...hands.flat(), ...deck].map((c) => c.def));
@@ -32,7 +33,7 @@ describe('Bộ bài với các bản mở rộng', () => {
   });
 });
 
-describe('Hỗn Loạn: Mèo Hoang & Mèo Sập Nguồn', () => {
+describe('Hỗn Loạn: Mèo Hoang & Mèo Nổ Sập', () => {
   it('Mèo Hoang ghép được với bất kỳ mèo nào', () => {
     let s = setup(['feral_cat cat_pho_bo', 'skip attack'], 'skip');
     s = passAll(act(s, 'p0', 'play', { cardIds: s.players.p0.hand.map((c) => c.id), targetId: 'p1' }));
@@ -44,7 +45,7 @@ describe('Hỗn Loạn: Mèo Hoang & Mèo Sập Nguồn', () => {
     expectRule(() => act(s, 'p0', 'play', { cardIds: s.players.p0.hand.map((c) => c.id), targetId: 'p1', namedDef: 'skip' }), /giống nhau/);
   });
 
-  it('rút Mèo Sập Nguồn lần đầu: lật ngửa và đặt lại, vị trí công khai; lần hai: bị loại không cứu được', () => {
+  it('rút Mèo Nổ Sập lần đầu: lật ngửa và đặt lại, vị trí công khai; lần hai: bị loại không cứu được', () => {
     let s = setup(['defuse', 'defuse', 'skip'], 'imploding skip skip skip');
     s = act(s, 'p0', 'draw');
     expect(s.pending?.kind).toBe('implode_place');
@@ -53,7 +54,7 @@ describe('Hỗn Loạn: Mèo Hoang & Mèo Sập Nguồn', () => {
     expect(s.currentId).toBe('p1');
     expect((catsEngine.projectView(s, 'p2') as { implodingPos: number }).implodingPos).toBe(1);
     s = act(s, 'p1', 'draw'); // rút skip
-    s = act(s, 'p2', 'draw'); // rút Mèo Sập Nguồn ngửa
+    s = act(s, 'p2', 'draw'); // rút Mèo Nổ Sập ngửa
     expect(s.players.p2.alive).toBe(false);
     expect(s.players.p0.hand.map((c) => c.def)).toEqual(['defuse']); // không ai mất Gỡ Bom
   });
@@ -211,11 +212,50 @@ describe('Đào Bới', () => {
 });
 
 describe('Rút gọn chồng bài', () => {
-  it('giữ tối đa max(12, số người × 5) lá thường trong chồng bài', () => {
-    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hon-loan', 'tang-toc', 'dao-boi'] as never };
-    const normal = (deck: { def: string }[]) => deck.filter((c) => !['exploding', 'imploding', 'defuse'].includes(c.def)).length;
-    expect(normal(buildAndDeal(cfg, 3, seededRng(1)).deck)).toBe(15);
-    expect(normal(buildAndDeal(cfg, 2, seededRng(1)).deck)).toBe(12);
-    expect(normal(buildAndDeal({ ...cfg, trimDeck: false }, 3, seededRng(1)).deck)).toBeGreaterThan(50);
+  const SPECIAL = ['exploding', 'imploding', 'time_bomb', 'chain_bomb', 'smoke_bomb', 'defuse'];
+  const normal = (deck: { def: string }[]) => deck.filter((c) => !SPECIAL.includes(c.def));
+  it('giữ tối đa max(20, số người × 8) lá thường, mèo sưu tập ≤ 30%', () => {
+    const cfg = CATS_DEFAULT_CONFIG;
+    for (const [n, size] of [
+      [2, 20],
+      [3, 24],
+      [6, 48],
+    ] as const) {
+      const pile = normal(buildAndDeal(cfg, n, seededRng(n)).deck);
+      expect(pile).toHaveLength(size);
+      const cats = pile.filter((c) => c.def.startsWith('cat_') || c.def === 'feral_cat').length;
+      expect(cats).toBeLessThanOrEqual(Math.floor(size * 0.3));
+    }
+    expect(normal(buildAndDeal({ ...cfg, trimDeck: false }, 3, seededRng(1)).deck).length).toBeGreaterThan(60);
+  });
+});
+
+describe('Gỡ Bom & số bom trong chồng bốc', () => {
+  it('chồng bốc có tối đa 1 Gỡ Bom', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const n = 2 + (seed % 7);
+      const { deck } = buildAndDeal(CATS_DEFAULT_CONFIG, n, seededRng(seed));
+      expect(deck.filter((c) => c.def === 'defuse').length).toBeLessThanOrEqual(1);
+    }
+    expect(catsEngine.parseConfig({ extraDefuses: 3 })).toMatchObject({ ok: true, config: { extraDefuses: 1 } }); // cấu hình cũ được chuyển đổi
+  });
+
+  it('mặc định có thêm 1 Mèo Nổ so với n − 1, chỉnh được bằng extraBombs', () => {
+    const plain = { ...CATS_DEFAULT_CONFIG, expansions: [] };
+    expect(planDeck(plain, 4)).toMatchObject({ bombs: 4 });
+    expect(planDeck({ ...plain, extraBombs: 3 }, 5)).toMatchObject({ bombs: 7 });
+    expect(planDeck({ ...plain, extraBombs: 0 }, 5)).toMatchObject({ bombs: 4 });
+  });
+
+  it('Kho Bom: Mèo Hẹn Giờ (2 lá từ 5 người), 1 Dây Chuyền, 2 Bom Khói', () => {
+    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hen-gio'] as never };
+    expect(planDeck(cfg, 4)).toMatchObject({ timeBomb: 1, chainBomb: 1, smokeBomb: 2 });
+    expect(planDeck(cfg, 6)).toMatchObject({ timeBomb: 2 });
+  });
+
+  it('Mèo Hoang, Tấn Công Mục Tiêu, Rút Từ Đáy, Biến Đổi Tương Lai thuộc bộ cơ bản', () => {
+    const { hands, deck } = buildAndDeal({ ...CATS_DEFAULT_CONFIG, expansions: [], trimDeck: false }, 3, seededRng(4));
+    const all = new Set([...hands.flat(), ...deck].map((c) => c.def));
+    for (const d of ['feral_cat', 'targeted_attack', 'draw_bottom', 'alter_future']) expect(all.has(d), d).toBe(true);
   });
 });

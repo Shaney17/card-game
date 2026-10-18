@@ -48,6 +48,8 @@ const PALETTES: Record<string, Palette> = {
   pass_bomb: { bg: '#c25a12', panel: '#ffe6cc', accent: '#ff9a3d' },
   fast_forward: { bg: '#24346b', panel: '#dbe4ff', accent: '#5a7cff' },
   take_that: { bg: '#6b2a8a', panel: '#f1dcff', accent: '#c06bff' },
+  chain_bomb: { bg: '#3a0f0f', panel: '#ffb27a', accent: '#ffd45c', text: '#ffe3d6' },
+  smoke_bomb: { bg: '#4a5260', panel: '#e3e7ee', accent: '#9aa5b5' },
 };
 
 const ORANGE = '#f59a3c';
@@ -571,6 +573,41 @@ const SCENES: Record<string, (p: Palette) => ReactNode> = {
       <Sparkle x={98} y={98} r={7} fill="#fff" />
     </>
   ),
+  chain_bomb: (p) => (
+    <>
+      <Burst cx={34} cy={52} r={30} points={12} fill={p.accent} />
+      <Burst cx={86} cy={84} r={30} points={12} fill="#fff1b8" />
+      <path d="M44 62 C 56 70 64 70 76 76" stroke={INK} strokeWidth="3" strokeDasharray="5 4" fill="none" />
+      <Bomb x={34} y={56} r={14} />
+      <Bomb x={86} y={88} r={14} />
+      <g transform="translate(34 30) scale(.45) translate(-60 -60)">
+        <CatHead cx={60} cy={60} r={20} fur={BLACKCAT} inner="#ff9db0" eyes="wide" mouth="open" blush={false} />
+      </g>
+      <g transform="translate(86 62) scale(.45) translate(-60 -60)">
+        <CatHead cx={60} cy={60} r={20} fur={ORANGE} stripes="#c96a1d" eyes="wide" mouth="o" />
+      </g>
+      <text x={60} y={124} textAnchor="middle" fontSize="13" fontWeight="900" fill="#fff" stroke={INK} strokeWidth="3" paintOrder="stroke" fontFamily="'Be Vietnam Pro',sans-serif">
+        ×2
+      </text>
+    </>
+  ),
+  smoke_bomb: (p) => (
+    <>
+      {[
+        [30, 40, 18],
+        [56, 30, 22],
+        [86, 40, 18],
+        [22, 70, 16],
+        [96, 72, 16],
+      ].map(([x, y, r], i) => (
+        <circle key={i} cx={x} cy={y} r={r} fill={p.accent} opacity={0.55 + i * 0.07} />
+      ))}
+      <CatHead cx={60} cy={76} r={22} fur={GREY} stripes="#6f7686" eyes="closed" mouth="o" />
+      <MiniCard x={26} y={108} r={-30} fill="#fff" />
+      <MiniCard x={94} y={110} r={28} fill="#ffe28a" />
+      <path d="M50 48 C 46 40 54 36 50 28 M70 48 C 66 40 74 36 70 28" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" />
+    </>
+  ),
 };
 
 /** Dùng cho kiểm thử: lá nào đã có minh hoạ riêng. */
@@ -604,6 +641,8 @@ export const CatsCardFace = memo(function CatsCardFace({ defId, small = false }:
         textAnchor="middle"
         fontFamily="'Patrick Hand', 'Be Vietnam Pro', cursive"
         fontSize={titleSize(name) + (small ? 1 : 0)}
+        textLength={name.length > 14 ? 100 : undefined}
+        lengthAdjust="spacingAndGlyphs"
         fontWeight="700"
         fill={p.text ?? '#fff'}
         stroke={INK}

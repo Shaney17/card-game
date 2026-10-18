@@ -9,7 +9,7 @@ const bombOf = (s: ReturnType<typeof setup>) => s.timeBombs.map((b) => ({ holder
 
 describe('Hẹn Giờ: bộ bài', () => {
   it('thêm đúng 1 Mèo Hẹn Giờ vào chồng bài, không chia lên tay', () => {
-    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hen-gio'] as never };
+    const cfg = { ...CATS_DEFAULT_CONFIG, expansions: ['hen-gio'] as never, extraBombs: 0 };
     expect(planDeck(cfg, 4)).toMatchObject({ timeBomb: 1, bombs: 3 });
     const { hands, deck } = buildAndDeal(cfg, 4, seededRng(2));
     expect(deck.filter((c) => c.def === 'time_bomb')).toHaveLength(1);
@@ -50,7 +50,7 @@ describe('Mèo Hẹn Giờ', () => {
     expect(s.currentId).toBe('p1');
   });
 
-  it('Né Lượt và Tấn Công cũng làm bom đếm ngược', () => {
+  it('Qua Lượt và Tấn Công cũng làm bom đếm ngược', () => {
     let s = setup(['skip attack', 'skip'], 'cat_pho_bo cat_pho_bo');
     s.timeBombs = [{ card: { id: 'tb', def: 'time_bomb' }, holderId: 'p0', turnsLeft: 3 }];
     s = playAndResolve(s, 'p0', 'skip');
@@ -122,5 +122,44 @@ describe('Ta Lấy Nhé', () => {
     let s = setup(['take_that take_that', 'skip'], 'cat_pho_bo');
     s = playAndResolve(s, 'p0', 'take_that', { targetId: 'p1' });
     expectRule(() => act(s, 'p0', 'play', { cardIds: [ids(s, 'p0', 'take_that')[0]], targetId: 'p1' }), /đã có người giành/);
+  });
+});
+
+describe('Mèo Nổ Dây Chuyền', () => {
+  it('người rút và người kế tiếp đều dính bom; có Gỡ Bom thì tự dùng, không có thì bị loại', () => {
+    let s = setup(['defuse', 'skip', 'skip'], 'chain_bomb cat_pho_bo cat_pho_bo');
+    s = act(s, 'p0', 'draw');
+    expect(s.players.p0.alive).toBe(true);
+    expect(defs(s, 'p0')).toEqual([]); // đã dùng Gỡ Bom
+    expect(s.players.p1.alive).toBe(false);
+    expect(s.players.p2.alive).toBe(true);
+    expect(deckDefs(s)).not.toContain('chain_bomb'); // bị huỷ, không nhét lại
+    expect(s.currentId).toBe('p2');
+  });
+
+  it('người rút bị loại thì lượt chuyển tiếp đúng', () => {
+    let s = setup(['skip', 'defuse', 'skip'], 'chain_bomb cat_pho_bo');
+    s = act(s, 'p0', 'draw');
+    expect(s.players.p0.alive).toBe(false);
+    expect(s.players.p1.alive).toBe(true);
+    expect(s.currentId).toBe('p1');
+  });
+});
+
+describe('Mèo Bom Khói', () => {
+  it('không bị loại nhưng rơi ngẫu nhiên 2 lá, Gỡ Bom không cứu', () => {
+    let s = setup(['defuse attack favor', 'skip'], 'smoke_bomb cat_pho_bo');
+    s = act(s, 'p0', 'draw');
+    expect(s.players.p0.alive).toBe(true);
+    expect(s.players.p0.hand).toHaveLength(1);
+    expect(s.discard.map((c) => c.def)).toContain('smoke_bomb');
+    expect(s.currentId).toBe('p1');
+  });
+
+  it('tay trống thì không mất gì', () => {
+    let s = setup(['', 'skip'], 'smoke_bomb cat_pho_bo');
+    s = act(s, 'p0', 'draw');
+    expect(s.players.p0.alive).toBe(true);
+    expect(s.currentId).toBe('p1');
   });
 });

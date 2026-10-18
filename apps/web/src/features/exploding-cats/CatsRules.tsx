@@ -25,7 +25,7 @@ export function CatsRules({ config }: { config: unknown }) {
       <ol>
         <li>Đánh bao nhiêu lá hành động tuỳ thích (hoặc không đánh lá nào).</li>
         <li>Mỗi lá hành động có {Math.round(c.nopeWindowMs / 1000)} giây để mọi người phản ứng bằng "Không!". Ai cũng có thể bấm "Cho qua" để xử lý nhanh.</li>
-        <li>Kết thúc lượt bằng cách <b>rút 1 lá</b> từ chồng bài (trừ khi bạn dùng Né Lượt, Tấn Công…).</li>
+        <li>Kết thúc lượt bằng cách <b>rút 1 lá</b> từ chồng bài (trừ khi bạn dùng Qua Lượt, Tấn Công…).</li>
         <li>Rút phải Mèo Nổ: nếu có Gỡ Bom thì tự động dùng và bạn bí mật giấu Mèo Nổ lại chồng bài; nếu không có thì bị loại.</li>
       </ol>
       <ul>

@@ -18,7 +18,7 @@ function TimerRow({ remaining, total, note }: Timer & { note: ReactNode }) {
   );
 }
 
-/** Chọn 1 lá trên tay (Xin Xỏ, Dọn Rác, Góp Lẩu). */
+/** Chọn 1 lá trên tay (Thiện Ý, Dọn Rác, Góp Lẩu). */
 export function CardPickerModal({
   title,
   note,
@@ -64,7 +64,7 @@ export function StealPickModal({
   );
 }
 
-/** Chọn vị trí trong chồng bài (Gỡ Bom, Mèo Sập Nguồn, Chôn Bài). */
+/** Chọn vị trí trong chồng bài (Gỡ Bom, Mèo Nổ Sập, Chôn Bài). */
 export function PositionModal({
   title,
   note,
@@ -122,7 +122,7 @@ export function AlterModal({
     setOrder(next);
   };
   return (
-    <Modal open title={shareWith ? 'Chia Sẻ Tương Lai' : 'Sắp Đặt Tương Lai'} dismissable={false} wide>
+    <Modal open title={shareWith ? 'Chia Sẻ Tương Lai' : 'Biến Đổi Tương Lai'} dismissable={false} wide>
       <TimerRow
         {...timer}
         note={

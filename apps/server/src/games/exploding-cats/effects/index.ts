@@ -75,7 +75,7 @@ export const EFFECTS: Record<string, EffectHandler> = {
       const turns = attackTurns(s);
       turnEndedFor(s, actorId, logs);
       if (s.phase !== 'PLAYING' || !s.players[p.targetId!].alive) return;
-      logs.push({ text: `${nameOf(s, p.targetId!)} bị tấn công chỉ định!`, kind: 'warn', sfx: 'attack' });
+      logs.push({ text: `${nameOf(s, p.targetId!)} bị tấn công mục tiêu!`, kind: 'warn', sfx: 'attack' });
       setTurn(s, p.targetId!, turns, true, ctx.now, logs);
     },
   },
@@ -107,14 +107,14 @@ export const EFFECTS: Record<string, EffectHandler> = {
     validate: noop,
     resolve(s, actorId, _p, ctx, logs) {
       s.direction = s.direction === 1 ? -1 : 1;
-      logs.push({ text: `${nameOf(s, actorId)} quay xe — đảo chiều chơi!`, kind: 'info', sfx: 'shuffle' });
+      logs.push({ text: `${nameOf(s, actorId)} đổi chiều chơi!`, kind: 'info', sfx: 'shuffle' });
       endOneTurn(s, ctx.now, logs);
     },
   },
   draw_bottom: {
     validate: noop,
     resolve(s, actorId, _p, ctx, logs) {
-      drawCard(s, actorId, 'bottom', ctx.now, logs);
+      drawCard(s, actorId, 'bottom', ctx.now, logs, ctx.rng);
     },
   },
   shuffle: {
@@ -123,7 +123,7 @@ export const EFFECTS: Record<string, EffectHandler> = {
       s.deck = shuffle(s.deck, ctx.rng);
       deckChanged(s);
       event(s, { type: 'shuffle', actorId });
-      logs.push({ text: `${nameOf(s, actorId)} xáo tung chồng bài.`, kind: 'info', sfx: 'shuffle' });
+      logs.push({ text: `${nameOf(s, actorId)} xào bài.`, kind: 'info', sfx: 'shuffle' });
     },
   },
   swap_top_bottom: {
@@ -186,7 +186,7 @@ export const EFFECTS: Record<string, EffectHandler> = {
     validate: (s, a, p) => requireTarget(s, a, p.targetId, true),
     resolve(s, actorId, p, ctx, logs) {
       if (!targetUsable(s, p.targetId, true)) {
-        logs.push({ text: 'Xin Xỏ mất tác dụng vì mục tiêu không còn bài.', kind: 'info' });
+        logs.push({ text: 'Thiện Ý mất tác dụng vì mục tiêu không còn bài.', kind: 'info' });
         return;
       }
       s.pending = { kind: 'favor', giverId: p.targetId!, receiverId: actorId, deadline: ctx.now + s.config.choiceTimeMs };
@@ -275,8 +275,8 @@ export const EFFECTS: Record<string, EffectHandler> = {
       const top = s.deck[0];
       if (!top) return;
       if (top.def === 'imploding' && top.faceUp) {
-        // Lá trên cùng là Mèo Sập Nguồn lật ngửa: chôn bài cũng là rút bài.
-        drawCard(s, actorId, 'top', ctx.now, logs);
+        // Lá trên cùng là Mèo Nổ Sập lật ngửa: chôn bài cũng là rút bài.
+        drawCard(s, actorId, 'top', ctx.now, logs, ctx.rng);
         return;
       }
       s.deck.shift();
@@ -289,7 +289,7 @@ export const EFFECTS: Record<string, EffectHandler> = {
     resolve(s, actorId, _p, ctx, logs) {
       if (!s.deck.length) return;
       if (s.deck.length === 1) {
-        drawCard(s, actorId, 'top', ctx.now, logs);
+        drawCard(s, actorId, 'top', ctx.now, logs, ctx.rng);
         return;
       }
       s.pending = { kind: 'dig', playerId: actorId, deadline: ctx.now + s.config.choiceTimeMs };
@@ -334,7 +334,7 @@ export const EFFECTS: Record<string, EffectHandler> = {
 };
 
 /** Hiệu ứng do lõi engine xử lý, không đánh như một hành động chính. */
-export const CORE_EFFECTS = new Set(['nope', 'defuse', 'explode', 'implode', 'time_bomb', 'passive']);
+export const CORE_EFFECTS = new Set(['nope', 'defuse', 'explode', 'implode', 'time_bomb', 'chain_bomb', 'smoke_bomb', 'passive']);
 
 // Kiểm tra lúc khởi động: mọi effectType trong dữ liệu đều có handler được cho phép.
 for (const d of CATS_CARDS) {

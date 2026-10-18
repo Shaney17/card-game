@@ -3,7 +3,7 @@ import type { CatsConfig } from './config';
 export interface CardInst {
   id: string;
   def: string;
-  /** Lá đang lật ngửa trong chồng bài (Mèo Sập Nguồn sau lần rút đầu). */
+  /** Lá đang lật ngửa trong chồng bài (Mèo Nổ Sập sau lần rút đầu). */
   faceUp?: boolean;
 }
 

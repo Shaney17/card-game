@@ -1,13 +1,14 @@
-# Luật Mèo Nổ đang triển khai (`meo-no-2.1.0`)
+# Luật Mèo Nổ đang triển khai (`meo-no-2.2.0`)
 
 Game **lấy cảm hứng** từ thể loại "mèo nổ", dùng bộ bài, tên gọi, mô tả và minh hoạ **nguyên bản** của dự án. Không mô phỏng chính xác một phiên bản thương mại.
 
 ## Chuẩn bị
 - 2–8 người. Mỗi người nhận `handSize` (7) lá thường + 1 Gỡ Bom.
-- Chồng bài: phần còn lại + Mèo Nổ + `extraDefuses` (2) Gỡ Bom (giới hạn theo số Gỡ Bom còn lại).
-- Số Mèo Nổ = số người − 1, **+1** nếu bật "Tăng Tốc" (vì Mèo Liều cho phép giữ bom), **−1** nếu bật "Hỗn Loạn" (thay bằng 1 Mèo Sập Nguồn).
-- `trimDeck` (bật mặc định): sau khi chia chỉ giữ tối đa `max(12, số người × 5)` lá thường trong chồng bài (bỏ ngẫu nhiên) để ván không quá dài khi bật nhiều bộ mở rộng.
-- `deckCopies = auto`: dùng 2 bộ khi trên 5 người. Server từ chối bắt đầu nếu không đủ Gỡ Bom/Mèo Nổ/lá thường (thông báo cụ thể).
+- Chồng bốc có **tối đa 1 Gỡ Bom** (`extraDefuses` 0–1, mặc định 1).
+- Số Mèo Nổ = số người − 1 + `extraBombs` (mặc định **+1**), +1 nếu bật "Tăng Tốc" (Mèo Liều), −1 nếu bật "Hỗn Loạn" (thay bằng 1 Mèo Nổ Sập).
+- "Kho Bom" thêm Mèo Hẹn Giờ (1 lá, 2 lá khi từ 5 người), 1 Mèo Nổ Dây Chuyền và 2 Mèo Bom Khói.
+- `trimDeck` (bật mặc định): chồng bốc giữ tối đa `max(20, số người × 8)` lá thường, trong đó mèo sưu tập tối đa 30% — phần còn lại là lá hành động.
+- Mặc định bật cả 4 bộ mở rộng; `deckCopies = auto` dùng 2 bộ khi trên 5 người. Server từ chối bắt đầu nếu không đủ Gỡ Bom/lá thường (thông báo cụ thể).
 
 ## Lượt
 1. Đánh 0..n lá hành động. Mỗi lá mở **cửa sổ phản ứng** `nopeWindowMs` (6s); ai cũng bấm "Cho qua" được để xử lý sớm (không lộ ai có "Không!").
@@ -23,23 +24,23 @@ Game **lấy cảm hứng** từ thể loại "mèo nổ", dùng bộ bài, tên
 |---|---|---|
 | Mèo Nổ | 4 | Rút phải mà không có Gỡ Bom thì bị loại |
 | Gỡ Bom | 6 | Tự dùng khi rút Mèo Nổ; chọn vị trí nhét lại |
-| Tấn Công | 4 | Kết thúc lượt không rút; người kế chơi 2 lượt (`attackStacking`: đang bị tấn công thì cộng dồn lượt còn lại + 2) |
-| Né Lượt | 4 | Kết thúc 1 lượt không rút |
-| Xin Xỏ | 4 | Mục tiêu (còn bài) tự chọn 1 lá đưa cho bạn |
-| Xáo Tung | 4 | Xáo chồng bài |
-| Mắt Thần | 5 | Xem bí mật 3 lá trên cùng |
-| Không! | 5 | Chặn hành động vừa đánh (trừ Mèo Nổ/Gỡ Bom); chồng "Không!" lên "Không!" được |
+| Tấn Công | 5 | Kết thúc lượt không rút; người kế chơi 2 lượt (`attackStacking`: đang bị tấn công thì cộng dồn lượt còn lại + 2) |
+| Qua Lượt | 6 | Kết thúc 1 lượt không rút |
+| Thiện Ý | 4 | Mục tiêu (còn bài) tự chọn 1 lá đưa cho bạn |
+| Xào Bài | 5 | Xáo chồng bài |
+| Xem Trước Tương Lai | 6 | Xem bí mật 3 lá trên cùng |
+| Không! | 6 | Chặn hành động vừa đánh (trừ Mèo Nổ/Gỡ Bom); chồng "Không!" lên "Không!" được |
+| Rút Từ Đáy | 4 | Kết thúc lượt bằng lá dưới cùng |
+| Biến Đổi Tương Lai | 5 | Xem & xếp lại 3 lá trên |
+| Tấn Công Mục Tiêu | 4 | Chọn người chơi 2 lượt, lượt tiếp tục từ người đó |
+| Mèo Hoang | 4 | Joker: ghép với mọi mèo sưu tập để tạo cặp/bộ ba |
 | 5 loại mèo sưu tập (Bánh Bao, Trà Sữa, Xôi Gấc, Phở Bò, Chè Ba Màu) | 4 mỗi loại | **2 lá giống nhau: người đánh chọn 1 lá úp** trên tay mục tiêu (thứ tự được server xáo bí mật; lá đã bị Đánh Dấu thì lộ mặt; hết giờ chọn ngẫu nhiên). 3 lá giống nhau: gọi tên 1 lá, có thì phải đưa |
 
 ### Mở rộng "Hỗn Loạn" (lấy cảm hứng Imploding Kittens)
 | Lá | SL | Hiệu ứng |
 |---|---|---|
-| Quay Xe | 4 | Đảo chiều chơi + kết thúc 1 lượt |
-| Rút Đáy | 4 | Kết thúc lượt bằng lá dưới cùng |
-| Sắp Đặt Tương Lai | 4 | Xem & xếp lại 3 lá trên |
-| Tấn Công Chỉ Định | 3 | Chọn người chơi 2 lượt, lượt tiếp tục từ người đó |
-| Mèo Hoang | 4 | Joker: ghép với mọi mèo sưu tập để tạo cặp/bộ ba |
-| Mèo Sập Nguồn | 1 | Rút lần đầu: lật ngửa, người rút đặt lại vị trí tuỳ ý (cả bàn thấy vị trí). Rút lần hai: bị loại, không Gỡ Bom/"Không!" được |
+| Đổi Chiều | 4 | Đổi chiều chơi + kết thúc 1 lượt |
+| Mèo Nổ Sập | 1 | Rút lần đầu: lật ngửa, người rút đặt lại vị trí tuỳ ý (cả bàn thấy vị trí). Rút lần hai: bị loại, không Gỡ Bom/"Không!" được |
 
 ### Mở rộng "Tăng Tốc" (lấy cảm hứng Streaking Kittens)
 | Lá | SL | Hiệu ứng |
@@ -60,13 +61,15 @@ Game **lấy cảm hứng** từ thể loại "mèo nổ", dùng bộ bài, tên
 | Chia Sẻ Tương Lai | 3 | Xem & xếp 3 lá trên, sau đó người kế tiếp được xem |
 | Đào Sâu | 3 | Kết thúc lượt: xem lá trên cùng, giữ nó hoặc trả lại và rút lá bên dưới |
 
-### Mở rộng "Hẹn Giờ" (nguyên bản; Ta Lấy Nhé lấy cảm hứng Barking Kittens)
+### Mở rộng "Kho Bom" (nguyên bản; Ta Lấy Nhé lấy cảm hứng Barking Kittens)
 | Lá | SL | Hiệu ứng |
 |---|---|---|
-| Mèo Hẹn Giờ | 1 | Không chia lên tay. Ai rút phải thì đặt ngửa trước mặt (công khai), đếm ngược `timeBombTurns` (3) lượt **của chính người giữ** — lượt rút không tính; mọi cách kết thúc lượt (rút, Né, Tấn Công, Siêu Né…) đều trừ 1. Về 0: có Gỡ Bom thì mất Gỡ Bom và bom bị vô hiệu; không có thì bị loại |
+| Mèo Hẹn Giờ | 1–2 | Không chia lên tay. Ai rút phải thì đặt ngửa trước mặt (công khai), đếm ngược `timeBombTurns` (3) lượt **của chính người giữ** — lượt rút không tính; mọi cách kết thúc lượt (rút, Né, Tấn Công, Siêu Né…) đều trừ 1. Về 0: có Gỡ Bom thì mất Gỡ Bom và bom bị vô hiệu; không có thì bị loại |
 | Chuyền Bom | 3 | Chuyền Mèo Hẹn Giờ bạn đang giữ cho người khác, giữ nguyên số lượt còn lại; không kết thúc lượt |
 | Tua Nhanh | 2 | Mọi Mèo Hẹn Giờ đang đếm bị trừ 1 ngay lập tức |
-| Ta Lấy Nhé | 3 | Lá tiếp theo mục tiêu rút (kể cả Mèo Nổ/Mèo Sập Nguồn/Mèo Hẹn Giờ) về tay bạn; lượt của mục tiêu vẫn kết thúc. Mỗi người chỉ bị giành 1 lần một lúc |
+| Mèo Nổ Dây Chuyền | 1 | Rút phải: người nhận lá **và** người kế tiếp đều dính bom; ai có Gỡ Bom thì tự dùng (lá bị huỷ), không có thì bị loại |
+| Mèo Bom Khói | 2 | Rút phải không bị loại nhưng rơi ngẫu nhiên 2 lá trên tay (Gỡ Bom không cứu) |
+| Ta Lấy Nhé | 3 | Lá tiếp theo mục tiêu rút (kể cả Mèo Nổ/Mèo Nổ Sập/Mèo Hẹn Giờ) về tay bạn; lượt của mục tiêu vẫn kết thúc. Mỗi người chỉ bị giành 1 lần một lúc |
 
 ## Bài trên tay
 Thứ tự bài là tuỳ chọn phía client: kéo thả để đổi chỗ (chuột: kéo ngay; cảm ứng: nhấn giữ ~0,25 giây rồi kéo, vuốt nhanh để cuộn), nút "Xếp bài" và công tắc "Tự xếp" (bom đang giữ → Gỡ Bom → Mèo Liều → "Không!" → hành động → mèo sưu tập theo loại).
@@ -74,4 +77,7 @@ Thứ tự bài là tuỳ chọn phía client: kéo thả để đổi chỗ (ch
 Mục tiêu bị loại/hết bài lúc hiệu ứng được xử lý → hiệu ứng mất tác dụng. Lá bị "Không!" vẫn vào chồng bỏ, lượt tiếp tục.
 
 ## Dữ liệu công khai / riêng tư
-Công khai: số bài mỗi người, Mèo Hẹn Giờ đang đếm và người giữ, ai đang bị "Ta Lấy Nhé", số lá trong chồng, số Mèo Nổ **chưa nổ** (trong chồng + đang bị giữ, để không lộ ai giữ bom), vị trí Mèo Sập Nguồn đã lật ngửa, lá bị Đánh Dấu, 5 lá trên cùng chồng bỏ, lượt, chiều chơi, người bị loại, chuỗi "Không!". Riêng tư: bài trên tay, kết quả Mắt Thần/Sắp Đặt/Chia Sẻ Tương Lai, lá Chôn Bài/Đào Sâu, lá bị lấy/được đưa (chỉ hai bên thấy), vị trí nhét bom và chôn bài.
+Công khai: số bài mỗi người, Mèo Hẹn Giờ đang đếm và người giữ, ai đang bị "Ta Lấy Nhé", số lá trong chồng, số Mèo Nổ **chưa nổ** (trong chồng + đang bị giữ, để không lộ ai giữ bom), vị trí Mèo Nổ Sập đã lật ngửa, lá bị Đánh Dấu, 5 lá trên cùng chồng bỏ, lượt, chiều chơi, người bị loại, chuỗi "Không!". Riêng tư: bài trên tay, kết quả Xem Trước Tương Lai/Sắp Đặt/Chia Sẻ Tương Lai, lá Chôn Bài/Đào Sâu, lá bị lấy/được đưa (chỉ hai bên thấy), vị trí nhét bom và chôn bài.
+
+## Tên lá
+Tên các lá cơ bản theo cách gọi phổ biến của cộng đồng chơi tiếng Việt (Qua Lượt, Xào Bài, Thiện Ý, Xem Trước Tương Lai, Rút Từ Đáy, Đổi Chiều, Biến Đổi Tương Lai, Tấn Công Mục Tiêu, Mèo Hoang, Mèo Nổ Sập).

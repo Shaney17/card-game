@@ -79,7 +79,7 @@ export interface CatsRoundView {
   deckCount: number;
   /** Số Mèo Nổ chưa nổ (trong chồng bài + đang bị giữ bí mật trên tay). */
   bombsLeft: number;
-  /** Vị trí (tính từ trên, 0 = trên cùng) của Mèo Sập Nguồn đang lật ngửa, nếu có. */
+  /** Vị trí (tính từ trên, 0 = trên cùng) của Mèo Nổ Sập đang lật ngửa, nếu có. */
   implodingPos: number | null;
   /** Mèo Hẹn Giờ đang đặt ngửa trước mặt người chơi (công khai). */
   timeBombs: { holderId: string; turnsLeft: number }[];

@@ -80,7 +80,7 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
     }
   }, [idle]);
 
-  // Mắt Thần / Chia Sẻ Tương Lai: mở khi có kết quả mới.
+  // Xem Trước Tương Lai / Chia Sẻ Tương Lai: mở khi có kết quả mới.
   const lastFuture = useRef<number | null>(null);
   useEffect(() => {
     if (r.seeFuture && r.seeFuture.seq !== lastFuture.current) {
@@ -103,8 +103,14 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
     lastSeq.current = e.seq;
     const name = (id?: string) => r.players.find((p) => p.id === id)?.nickname ?? '';
     const map: Record<string, string> = {
-      explode: `${name(e.actorId)} dính MÈO NỔ!`,
-      implode: `${name(e.actorId)} rút phải MÈO SẬP NGUỒN!`,
+      explode: e.cardDefs?.includes('smoke_bomb')
+        ? `${name(e.actorId)} dính BOM KHÓI!`
+        : e.cardDefs?.includes('chain_bomb')
+          ? 'NỔ DÂY CHUYỀN!'
+          : e.cardDefs?.includes('time_bomb')
+            ? 'MÈO HẸN GIỜ PHÁT NỔ!'
+            : `${name(e.actorId)} dính MÈO NỔ!`,
+      implode: `${name(e.actorId)} rút phải MÈO NỔ SẬP!`,
       eliminate: `${name(e.actorId)} đã bị loại!`,
       nope: 'KHÔNG!',
       defuse: 'Đã gỡ bom!',
@@ -177,7 +183,7 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
       case 'defuse':
         return pending.playerId === meId ? 'Bạn đã gỡ bom! Chọn chỗ giấu Mèo Nổ.' : `${name(pending.playerId)} đang bí mật giấu Mèo Nổ vào chồng bài…`;
       case 'implode_place':
-        return pending.playerId === meId ? 'Chọn chỗ đặt Mèo Sập Nguồn (lật ngửa, cả bàn đều thấy).' : `${name(pending.playerId)} đang đặt Mèo Sập Nguồn lật ngửa vào chồng bài…`;
+        return pending.playerId === meId ? 'Chọn chỗ đặt Mèo Nổ Sập (lật ngửa, cả bàn đều thấy).' : `${name(pending.playerId)} đang đặt Mèo Nổ Sập lật ngửa vào chồng bài…`;
       case 'alter':
         return pending.playerId === meId ? 'Sắp xếp lại 3 lá trên cùng.' : `${name(pending.playerId)} đang sắp đặt tương lai…`;
       case 'steal_pick':
@@ -260,11 +266,11 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
               {r.implodingPos === 0 ? <CatsCardFace defId="imploding" /> : <CardBack variant="cats" />}
             </div>
             <span className="pile-label">
-              Chồng bài: <b>{r.deckCount}</b> lá · <b className="bomb-count">{r.bombsLeft}</b> Mèo Nổ chưa nổ
+              Chồng bài: <b>{r.deckCount}</b> lá · <b className="bomb-count">{r.bombsLeft}</b> bom chết người
             </span>
             {r.implodingPos !== null && (
               <span className="implode-warn">
-                Mèo Sập Nguồn đang ngửa ở vị trí <b>{r.implodingPos + 1}</b> từ trên
+                Mèo Nổ Sập đang ngửa ở vị trí <b>{r.implodingPos + 1}</b> từ trên
               </span>
             )}
             {idle && (
@@ -491,7 +497,7 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
       )}
       {pending?.kind === 'implode_place' && pending.playerId === meId && (
         <PositionModal
-          title="Đặt Mèo Sập Nguồn (lật ngửa)"
+          title="Đặt Mèo Nổ Sập (lật ngửa)"
           note="Lá được lật ngửa nên cả bàn sẽ thấy vị trí. Ai rút trúng lần sau sẽ bị loại ngay."
           deckCount={pending.deckCount}
           card="imploding"
@@ -520,7 +526,7 @@ export function CatsBoard({ view, clockOffset }: { view: TableView; clockOffset:
 
       <Modal
         open={futureOpen && !!r.seeFuture}
-        title={r.seeFuture?.from ? `${name(r.seeFuture.from)} chia sẻ 3 lá trên cùng` : 'Mắt Thần — 3 lá trên cùng'}
+        title={r.seeFuture?.from ? `${name(r.seeFuture.from)} chia sẻ 3 lá trên cùng` : 'Xem Trước Tương Lai — 3 lá trên cùng'}
         onClose={() => setFutureOpen(false)}
       >
         <p className="muted small">Từ trái sang phải: lá trên cùng trước. Chỉ mình bạn thấy.</p>
