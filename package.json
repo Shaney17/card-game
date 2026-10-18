@@ -1,0 +1,15 @@
+{
+  "name": "chieu-bai",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @chieu-bai/server --filter @chieu-bai/web dev",
+    "build": "pnpm --filter @chieu-bai/web build",
+    "start": "pnpm --filter @chieu-bai/server start",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
