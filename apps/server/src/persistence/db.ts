@@ -20,6 +20,7 @@ export interface PlayerRow {
 
 export interface Store {
   findPlayerByTokenHash(hash: string): PlayerRow | undefined;
+  findPlayerById(id: string): Omit<PlayerRow, 'token_hash'> | undefined;
   createPlayer(row: PlayerRow): void;
   updateProfile(id: string, nickname: string, avatar: string): void;
   loadTable(tableId: string): { config: unknown; status: string } | undefined;
@@ -31,6 +32,9 @@ export interface Store {
   /** Quyết toán idempotent: chỉ áp dụng một lần cho mỗi ván. */
   settleSession(sessionId: string, gameId: string, result: unknown, settlements: Settlement[]): { applied: boolean };
   lastRoundNumber(tableId: string): number;
+  /** Ảnh chụp trạng thái bàn (kể cả ván đang chơi) để khôi phục khi server khởi động lại. Chỉ server đọc. */
+  saveSnapshot(tableId: string, snapshot: unknown): void;
+  loadSnapshot(tableId: string): unknown;
   close(): void;
 }
 
@@ -53,6 +57,11 @@ export function openStore(file: string): Store {
       game_id TEXT NOT NULL,
       config_json TEXT NOT NULL,
       status TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS table_snapshots (
+      table_id TEXT PRIMARY KEY,
+      snapshot_json TEXT NOT NULL,
       updated_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS game_sessions (
@@ -100,6 +109,7 @@ export function openStore(file: string): Store {
 
   const q = {
     findPlayer: db.prepare('SELECT id, token_hash, nickname, avatar FROM players WHERE token_hash = ?'),
+    findPlayerById: db.prepare('SELECT id, nickname, avatar FROM players WHERE id = ?'),
     createPlayer: db.prepare('INSERT INTO players (id, token_hash, nickname, avatar, created_at) VALUES (?, ?, ?, ?, ?)'),
     updateProfile: db.prepare('UPDATE players SET nickname = ?, avatar = ? WHERE id = ?'),
     loadTable: db.prepare('SELECT config_json, status FROM game_tables WHERE id = ?'),
@@ -123,10 +133,16 @@ export function openStore(file: string): Store {
       'INSERT INTO ledger (session_id, settlement_key, player_id, game_id, amount, reason, ts) VALUES (?, ?, ?, ?, ?, ?, ?)',
     ),
     lastRound: db.prepare('SELECT MAX(round_number) AS n FROM game_sessions WHERE table_id = ?'),
+    saveSnapshot: db.prepare(
+      `INSERT INTO table_snapshots (table_id, snapshot_json, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(table_id) DO UPDATE SET snapshot_json = excluded.snapshot_json, updated_at = excluded.updated_at`,
+    ),
+    loadSnapshot: db.prepare('SELECT snapshot_json FROM table_snapshots WHERE table_id = ?'),
   };
 
   return {
     findPlayerByTokenHash: (hash) => q.findPlayer.get(hash) as PlayerRow | undefined,
+    findPlayerById: (id) => q.findPlayerById.get(id) as Omit<PlayerRow, 'token_hash'> | undefined,
     createPlayer: (r) => void q.createPlayer.run(r.id, r.token_hash, r.nickname, r.avatar, Date.now()),
     updateProfile: (id, nickname, avatar) => void q.updateProfile.run(nickname, avatar, id),
     loadTable(tableId) {
@@ -184,6 +200,11 @@ export function openStore(file: string): Store {
     },
     lastRoundNumber(tableId) {
       return Number((q.lastRound.get(tableId) as { n: number | null }).n ?? 0);
+    },
+    saveSnapshot: (tableId, snapshot) => void q.saveSnapshot.run(tableId, JSON.stringify(snapshot), Date.now()),
+    loadSnapshot(tableId) {
+      const row = q.loadSnapshot.get(tableId) as { snapshot_json: string } | undefined;
+      return row ? JSON.parse(row.snapshot_json) : undefined;
     },
     close: () => db.close(),
   };

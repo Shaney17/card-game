@@ -42,11 +42,17 @@ export class PlayerDirectory {
   }
 
   get(id: string): PublicPlayer | undefined {
-    return this.cache.get(id);
+    const cached = this.cache.get(id);
+    if (cached) return cached;
+    const row = this.store.findPlayerById(id);
+    if (!row) return undefined;
+    const p = { id: row.id, nickname: row.nickname, avatar: row.avatar };
+    this.cache.set(id, p);
+    return p;
   }
 
   updateProfile(id: string, nickname: unknown, avatar: unknown): PublicPlayer | string {
-    const p = this.cache.get(id);
+    const p = this.get(id);
     if (!p) return 'Không tìm thấy người chơi.';
     const name = sanitizeNickname(nickname);
     if (!name) return 'Biệt danh phải dài 2–20 ký tự.';

@@ -55,7 +55,7 @@ export interface RoundResultView {
   title: string;
   settlements: SettlementView[];
   /** Tổng thay đổi và số dư mới theo người chơi. */
-  totals: { playerId: string; delta: number; balance: number | null }[];
+  totals: { playerId: string; nickname: string; avatar: string; delta: number; balance: number | null }[];
   /** Dữ liệu riêng từng game (ví dụ: bài còn lại của Sâm). */
   detail: unknown;
 }

@@ -1,0 +1,43 @@
+/* Design tokens — Chiếu Bài. Dùng chung cho mọi game; mỗi game có lớp màu riêng. */
+:root {
+  --font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-fun: 'Patrick Hand', 'Be Vietnam Pro', cursive;
+
+  --night: #121c19;
+  --night-2: #1a2924;
+  --night-3: #243631;
+  --paper: #fffaf0;
+  --paper-2: #f4ead5;
+  --ink: #1d2230;
+  --ink-2: #4a5263;
+  --line: #e2d6bd;
+  --on-dark: #f4ead5;
+  --on-dark-muted: #b8c2b9;
+
+  --gold: #c9a14a;
+  --gold-2: #e8c46c;
+  --lacquer: #c8323c;
+  --lacquer-2: #e04a52;
+  --jade: #2fbf83;
+  --sky: #5aa5ff;
+  --amber: #f2a93b;
+
+  --felt: #1d6a4e;
+  --felt-2: #134a37;
+
+  --cats-1: #2b1d4f;
+  --cats-2: #3d2a6e;
+  --cats-pop: #ff8a3d;
+  --cats-sun: #ffd45c;
+
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.18), 0 2px 8px rgb(0 0 0 / 0.12);
+  --shadow-2: 0 8px 30px rgb(0 0 0 / 0.28);
+  --shadow-card: 0 2px 0 rgb(0 0 0 / 0.15), 0 6px 14px rgb(0 0 0 / 0.25);
+
+  --tap: 44px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

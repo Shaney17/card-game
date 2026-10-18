@@ -1,3 +1,4 @@
+import type { SamRoundView } from '@chieu-bai/shared';
 import { z } from 'zod';
 import {
   GameRuleError,
@@ -349,6 +350,7 @@ export const samEngine: GameEngine<SamConfig, SamState> = {
         blockerId: f.blockerId ?? null,
         samDeclarerId: s.samDeclarerId,
         instantKind: f.instantKind ?? null,
+        transfers: transfers.map((t) => ({ from: t.from, to: t.to, amount: t.amount, reason: t.reason })),
         hands: s.players.map((p) => ({
           playerId: p.id,
           cards: p.hand,
@@ -359,7 +361,7 @@ export const samEngine: GameEngine<SamConfig, SamState> = {
     };
   },
 
-  projectView(s, viewerId) {
+  projectView(s, viewerId): SamRoundView {
     const me = s.players.find((p) => p.id === viewerId);
     const finished = s.phase === 'ROUND_FINISHED';
     const top = s.trick[s.trick.length - 1];

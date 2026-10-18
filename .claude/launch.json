@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "server", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@chieu-bai/server", "dev"], "port": 3001 },
+    { "name": "web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@chieu-bai/web", "dev"], "port": 5190 }
+  ]
+}

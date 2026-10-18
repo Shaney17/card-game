@@ -1,4 +1,4 @@
-import { CATS_CARD_BY_ID } from '@chieu-bai/shared';
+import { CATS_CARD_BY_ID, type CatsPendingView, type CatsRoundView } from '@chieu-bai/shared';
 import { z } from 'zod';
 import {
   GameRuleError,
@@ -352,10 +352,10 @@ export const catsEngine: GameEngine<CatsConfig, CatsState> = {
     };
   },
 
-  projectView(s, viewerId) {
+  projectView(s, viewerId): CatsRoundView {
     const me = viewerId ? s.players[viewerId] : undefined;
     const pending = s.pending;
-    let pendingView: unknown = null;
+    let pendingView: CatsPendingView | null = null;
     if (pending?.kind === 'action') {
       const last = pending.nopes.length ? pending.nopes[pending.nopes.length - 1].playerId : pending.actorId;
       const need = requiredPassers(s);

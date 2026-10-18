@@ -198,3 +198,34 @@ describe('Bàn chơi cố định', () => {
     expect(after).toBe(before + 5000);
   });
 });
+
+describe('Khôi phục sau khi máy chủ khởi động lại', () => {
+  it('giữ nguyên chỗ ngồi và ván đang chơi, người chơi được coi là mất kết nối', () => {
+    store = openStore(':memory:');
+    const dir = new PlayerDirectory(store);
+    const opts = { now, rng: seededRng(5), autoTimers: false };
+    const t1 = new GameTable(GAMES.sam, samEngine, store, dir, opts);
+    const a = dir.resolve(undefined).player;
+    const b = dir.resolve(undefined).player;
+    t1.join(a.id);
+    t1.join(b.id);
+    t1.setReady(a.id, true);
+    t1.setReady(b.id, true);
+    const before = t1.view(a.id, false);
+    expect(before.status).toBe('PLAYING');
+
+    clock += 3000;
+    const t2 = new GameTable(GAMES.sam, samEngine, store, dir, opts);
+    const after = t2.view(a.id, false);
+    expect(after.status).toBe('PLAYING');
+    expect(after.round?.id).toBe(before.round?.id);
+    expect((after.round!.view as { myHand: string[] }).myHand).toEqual((before.round!.view as { myHand: string[] }).myHand);
+    expect(after.seats.every((s) => !s.connected)).toBe(true);
+    // Hạn chờ được dời đúng bằng thời gian máy chủ ngừng
+    const d1 = (before.round!.view as { deadline: number }).deadline;
+    const d2 = (after.round!.view as { deadline: number }).deadline;
+    expect(d2 - d1).toBe(3000);
+    t2.setConnected(a.id, true);
+    expect(t2.view(a.id, false).seats.find((s) => s.player.id === a.id)?.connected).toBe(true);
+  });
+});

@@ -24,7 +24,11 @@ interface Seat {
   waiting: boolean;
   leaving: boolean;
   goneHandled: boolean;
+  /** Đã ghi log "mất kết nối" (chỉ ghi khi kéo dài, tránh spam khi tải lại trang). */
+  disconnectLogged: boolean;
 }
+
+const DISCONNECT_LOG_DELAY_MS = 5_000;
 
 interface StoredLog extends LogEntry {
   visibleTo?: string[];
@@ -115,6 +119,45 @@ export class GameTable {
     if (saved?.status === 'CLOSED') this.manual = 'CLOSED';
     this.roundCounter = store.lastRoundNumber(this.id);
     store.saveTable(this.id, this.gameId, this.config, this.manual ?? 'OPEN');
+    this.restore();
+  }
+
+  // ------------------------------------------------------------------ khôi phục sau khi khởi động lại
+  private snapshot() {
+    return {
+      v: 1,
+      rulesVersion: this.engine.rulesVersion,
+      seats: this.seats,
+      round: this.round,
+      log: this.log,
+      logSeq: this.logSeq,
+      lastResult: this.lastResult,
+      resultUntil: this.resultUntil,
+      lastWinnerId: this.lastWinnerId,
+      pausedAt: this.pausedAt,
+      savedAt: this.now(),
+    };
+  }
+
+  private restore() {
+    const snap = this.store.loadSnapshot(this.id) as ReturnType<GameTable['snapshot']> | undefined;
+    if (!snap || snap.v !== 1 || snap.rulesVersion !== this.engine.rulesVersion) return;
+    const now = this.now();
+    // Mọi người coi như đang mất kết nối cho tới khi kết nối lại.
+    this.seats = snap.seats.map((s) => ({ ...s, connected: false, disconnectedAt: s.disconnectedAt ?? now, disconnectLogged: true }));
+    this.round = snap.round;
+    this.log = snap.log;
+    this.logSeq = snap.logSeq;
+    this.lastResult = snap.lastResult;
+    this.resultUntil = snap.resultUntil;
+    this.lastWinnerId = snap.lastWinnerId;
+    this.pausedAt = snap.pausedAt;
+    if (this.round && this.roundActive() && this.manual !== 'PAUSED') {
+      // Thời gian server ngừng chạy không tính vào lượt của người chơi.
+      this.round.state = this.engine.shiftDeadlines(this.round.state, Math.max(0, now - snap.savedAt));
+    }
+    this.sys('Máy chủ vừa khởi động lại — trạng thái bàn đã được khôi phục.', 'system');
+    this.schedule();
   }
 
   onChange(fn: () => void) {
@@ -153,6 +196,7 @@ export class GameTable {
 
   private changed() {
     this.version += 1;
+    this.store.saveSnapshot(this.id, this.snapshot());
     this.schedule();
     for (const fn of this.listeners) fn();
   }
@@ -204,6 +248,7 @@ export class GameTable {
       waiting: playing,
       leaving: false,
       goneHandled: false,
+      disconnectLogged: false,
     });
     this.seats.sort((a, b) => a.seat - b.seat);
     if (this.engine.usesBalance) this.store.ensureBalance(playerId, this.gameId, (this.config as { startingBalance: number }).startingBalance);
@@ -249,7 +294,8 @@ export class GameTable {
     if (!seat || seat.connected === connected) return;
     seat.connected = connected;
     seat.disconnectedAt = connected ? null : this.now();
-    this.sys(connected ? `${this.nick(playerId)} đã kết nối lại.` : `${this.nick(playerId)} mất kết nối…`, 'system');
+    if (connected && seat.disconnectLogged) this.sys(`${this.nick(playerId)} đã kết nối lại.`, 'system');
+    seat.disconnectLogged = false;
     this.changed();
   }
 
@@ -358,6 +404,8 @@ export class GameTable {
     if (!applied) console.warn(`[${this.id}] ván ${round.id} đã được quyết toán trước đó — bỏ qua.`);
     const totals = round.players.map((pid) => ({
       playerId: pid,
+      nickname: this.nick(pid),
+      avatar: this.players.get(pid)?.avatar ?? 'meo-cam',
       delta: outcome.settlements.filter((s) => s.playerId === pid).reduce((a, s) => a + s.amount, 0),
       balance: this.engine.usesBalance ? (this.store.getBalance(pid, this.gameId) ?? null) : null,
     }));
@@ -428,6 +476,7 @@ export class GameTable {
     const grace = this.engine.tablePolicy(this.config).disconnectGraceMs;
     for (const s of this.seats) {
       if (s.connected || s.disconnectedAt === null) continue;
+      if (!s.disconnectLogged) times.push(s.disconnectedAt + DISCONNECT_LOG_DELAY_MS);
       const inRound = this.roundActive() && this.round!.players.includes(s.playerId);
       if (inRound && !s.goneHandled && grace !== null) times.push(s.disconnectedAt + grace);
       if (!inRound) times.push(s.disconnectedAt + this.opts.idleSeatTimeoutMs);
@@ -462,6 +511,11 @@ export class GameTable {
     const grace = this.engine.tablePolicy(this.config).disconnectGraceMs;
     for (const s of [...this.seats]) {
       if (s.connected || s.disconnectedAt === null) continue;
+      if (!s.disconnectLogged && now - s.disconnectedAt >= DISCONNECT_LOG_DELAY_MS) {
+        s.disconnectLogged = true;
+        this.sys(`${this.nick(s.playerId)} mất kết nối…`, 'system');
+        dirty = true;
+      }
       const inRound = this.roundActive() && this.round!.players.includes(s.playerId);
       if (inRound && !s.goneHandled && grace !== null && now - s.disconnectedAt >= grace) {
         s.goneHandled = true;
